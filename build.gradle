@@ -1,0 +1,58 @@
+apply plugin: 'idea'
+apply plugin: 'java'
+
+version = '0.0.1'
+
+repositories {
+    mavenCentral()
+    flatDir {
+       dirs 'libs'
+    }
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main']
+        }
+    }
+    examples {
+        java {
+            srcDirs = ['src/examples']
+        }
+    }
+}
+
+configurations {
+    provided
+    compile.extendsFrom provided
+}
+
+task bukkitPlugin(type: Jar) {
+    baseName = '777'
+    manifest {
+        attributes 'Implementation-Title': '777',
+                   'Implementation-Version': version
+    }
+    from (sourceSets.main.output) {
+        include "net/rocketeer/sevens/**"
+    }
+    from ('src/main/resources/bukkit') {
+        include "config.yml"
+        include "plugin.yml"
+    }
+    from {
+        (configurations.compile - configurations.provided).collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+dependencies {
+    provided name: 'spigot-api-1.9.4'
+    provided name: 'worldguard-6.1.2'
+    provided group: 'com.google.code.gson', name: 'gson', version: '2.7'
+}
+
+buildDir = 'bin'
