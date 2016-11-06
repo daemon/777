@@ -10,7 +10,7 @@ import java.sql.Statement;
 import java.util.Stack;
 
 // Adds delimiter support for executing an SQL file
-public class SqlStreamExecutor {
+public class SqlStreamExecutor implements AutoCloseable {
   private enum State { QUERY_BUILD, DELIMITER_CHANGE, DELIMITER_CHANGING, DELIMITER_CHECK }
   private final Connection connection;
   private final InputStreamReader in;
@@ -24,6 +24,11 @@ public class SqlStreamExecutor {
   public SqlStreamExecutor(Connection connection, InputStream stream) {
     this.in = new InputStreamReader(stream);
     this.connection = connection;
+  }
+
+  @Override
+  public void close() throws SQLException {
+    this.connection.close();
   }
 
   private void executeStatement(String statement) {

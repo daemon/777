@@ -1,21 +1,24 @@
 package net.rocketeer.sevens;
 
-import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
-import net.rocketeer.sevens.stats.Property;
+import net.rocketeer.sevens.database.DatabaseManager;
+import net.rocketeer.sevens.database.SqlStreamExecutor;
+import net.rocketeer.sevens.player.MySqlPlayerDatabase;
+import net.rocketeer.sevens.player.PlayerDatabase;
+import net.rocketeer.sevens.player.listener.DeathListener;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.service.ServiceRegistry;
 
-import java.sql.Connection;
+import java.beans.PropertyVetoException;
+import java.io.InputStream;
+import java.sql.SQLException;
 
 public class SevensPlugin extends JavaPlugin {
-  private SessionFactory factory;
+  private DatabaseManager databaseManager;
+  private PlayerDatabase playerDatabase;
 
-  public void initDatabase() {
+  public void initDatabase() throws PropertyVetoException {
     FileConfiguration config = this.getConfig();
     ConfigurationSection mysqlCfg = config.getConfigurationSection("mysql");
     String username = mysqlCfg.getString("username");
@@ -24,20 +27,26 @@ public class SevensPlugin extends JavaPlugin {
     String database = mysqlCfg.getString("database");
     int port = mysqlCfg.getInt("port");
     String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
-    Configuration hibernateCfg = new Configuration();
-    hibernateCfg.configure();
-    hibernateCfg.setProperty("hibernate.connection.url", url);
-    hibernateCfg.setProperty("hibernate.connection.username", username);
-    hibernateCfg.setProperty("hibernate.connection.password", password);
-    hibernateCfg.setProperty("hibernate.hbm2ddl.auto", "create");
-    hibernateCfg.addAnnotatedClass(Property.class);
-    this.factory = hibernateCfg.buildSessionFactory();
+    this.databaseManager =  new DatabaseManager(url, username, password);
+    this.playerDatabase = new MySqlPlayerDatabase(this.databaseManager);
+    InputStream stream = this.getClass().getResourceAsStream("/init.sql");
+    try (SqlStreamExecutor executor = new SqlStreamExecutor(this.databaseManager.getConnection(), stream)) {
+      executor.execute();
+    } catch (SQLException exception) {
+      exception.printStackTrace();
+    }
   }
 
   @Override
   public void onEnable() {
     this.saveDefaultConfig();
-    this.initDatabase();
+    try {
+      this.initDatabase();
+    } catch (PropertyVetoException e) {
+      e.printStackTrace();
+      return;
+    }
+    Bukkit.getPluginManager().registerEvents(new DeathListener(this.playerDatabase), this);
   }
 
   @Override
