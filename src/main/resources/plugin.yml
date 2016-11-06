@@ -1,0 +1,4 @@
+name: 777
+main: net.rocketeer.sevens.SevensPlugin
+version: 0.0.1
+depend: [WorldEdit,WorldGuard]

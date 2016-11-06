@@ -4,3 +4,5 @@ mysql:
   hostname: hostname
   database: database
   port: 3306
+worlds:
+  - bendarenas

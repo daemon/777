@@ -13,6 +13,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.beans.PropertyVetoException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class SevensPlugin extends JavaPlugin {
   private DatabaseManager databaseManager;
@@ -46,7 +49,10 @@ public class SevensPlugin extends JavaPlugin {
       e.printStackTrace();
       return;
     }
-    Bukkit.getPluginManager().registerEvents(new DeathListener(this.playerDatabase), this);
+    List<String> worlds = this.getConfig().getStringList("worlds");
+    Set<String> trackedWorlds = new HashSet<>();
+    worlds.forEach(trackedWorlds::add);
+    Bukkit.getPluginManager().registerEvents(new DeathListener(this, this.playerDatabase, trackedWorlds), this);
   }
 
   @Override

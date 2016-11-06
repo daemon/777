@@ -42,6 +42,7 @@ task bukkitPlugin(type: Jar) {
     }
     from ('src/main/resources/bukkit') {
         include "config.yml"
+        include "init.sql"
         include "plugin.yml"
     }
     from {
