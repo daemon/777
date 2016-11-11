@@ -5,7 +5,6 @@ import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.database.TransactionGuard;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,15 +19,14 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
   }
 
   private static Integer findPlayerId(Connection connection, UUID uuid) throws SQLException, IOException {
-    InputStream stream = PlayerDatabase.uuidToStream(uuid);
-    try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM svns_player WHERE uuid=? FOR UPDATE")) {
-      stmt.setBlob(1, stream);
+    try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM svns_players WHERE uuid=? FOR UPDATE")) {
+      stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next())
           return rs.getInt(1);
       }
-      try (PreparedStatement stmt2 = connection.prepareStatement("INSERT INTO svns_player (uuid) WHERE uuid=?", Statement.RETURN_GENERATED_KEYS)) {
-        stmt2.setBlob(1, PlayerDatabase.uuidToStream(uuid));
+      try (PreparedStatement stmt2 = connection.prepareStatement("INSERT INTO svns_players (uuid) VALUES(?)", Statement.RETURN_GENERATED_KEYS)) {
+        stmt2.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
         int rows = stmt2.executeUpdate();
         if (rows == 0)
           throw new SQLException("Creating player failed!");
@@ -100,5 +98,10 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       if (rows == 0)
         throw new SQLException("Updating record failed!");
     }
+  }
+
+  @Override
+  public int fetchScore(SevensPlayer player) throws Exception {
+    return 0;
   }
 }

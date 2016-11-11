@@ -6,3 +6,5 @@ mysql:
   port: 3306
 worlds:
   - bendarenas
+spree-min-kills: 3
+default-bounty: 10

@@ -2,12 +2,17 @@ package net.rocketeer.sevens;
 
 import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.database.SqlStreamExecutor;
+import net.rocketeer.sevens.game.name.NameTagRegistry;
 import net.rocketeer.sevens.player.MySqlPlayerDatabase;
 import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.listener.DeathListener;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.beans.PropertyVetoException;
@@ -20,6 +25,7 @@ import java.util.Set;
 public class SevensPlugin extends JavaPlugin {
   private DatabaseManager databaseManager;
   private PlayerDatabase playerDatabase;
+  private NameTagRegistry registry;
 
   public void initDatabase() throws PropertyVetoException {
     FileConfiguration config = this.getConfig();
@@ -32,12 +38,7 @@ public class SevensPlugin extends JavaPlugin {
     String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
     this.databaseManager =  new DatabaseManager(url, username, password);
     this.playerDatabase = new MySqlPlayerDatabase(this.databaseManager);
-    InputStream stream = this.getClass().getResourceAsStream("/init.sql");
-    try (SqlStreamExecutor executor = new SqlStreamExecutor(this.databaseManager.getConnection(), stream)) {
-      executor.execute();
-    } catch (SQLException exception) {
-      exception.printStackTrace();
-    }
+    this.databaseManager.initDatabase();
   }
 
   @Override
@@ -53,6 +54,19 @@ public class SevensPlugin extends JavaPlugin {
     Set<String> trackedWorlds = new HashSet<>();
     worlds.forEach(trackedWorlds::add);
     Bukkit.getPluginManager().registerEvents(new DeathListener(this, this.playerDatabase, trackedWorlds), this);
+    this.registry = new NameTagRegistry("name");
+    registry.init(this);
+    Bukkit.getPluginCommand("ttt").setExecutor(new TestExecutor());
+  }
+
+  public class TestExecutor implements CommandExecutor {
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String s, String[] strings) {
+      Player player = (Player) sender;
+      String nn = strings[0];
+      registry.registerNameTag(player, nn);
+      return true;
+    }
   }
 
   @Override

@@ -1,4 +1,10 @@
 name: 777
 main: net.rocketeer.sevens.SevensPlugin
 version: 0.0.1
-depend: [WorldEdit,WorldGuard]
+depend: [WorldEdit,WorldGuard,ProtocolLib]
+commands:
+  ttt:
+    description: test
+    usage: test
+    permission: test
+    permission-message: test

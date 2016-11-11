@@ -9,25 +9,13 @@ public class SevensPlayer {
     this.database = database;
   }
 
-  public Record fetchRecord(SevensPlayer other) {
-    try {
-      return this.database.fetchRecord(this, other);
-    } catch (Exception e) {
-      return null;
-    }
+  public void addKillAgainst(SevensPlayer other) throws Exception {
+    Record record = this.database.fetchRecord(this, other);
+    this.database.updateRecord(record, 1, 0);
   }
 
-  public void addKillAgainst(SevensPlayer other) {
-    try {
-      Record record = this.database.fetchRecord(this, other);
-      this.database.updateRecord(record, 1, 0);
-    } catch (Exception ignored) {}
-  }
-
-  public void addDeathAgainst(SevensPlayer other) {
-    try {
-      Record record = this.database.fetchRecord(this, other);
-      this.database.updateRecord(record, 0, 1);
-    } catch (Exception ignored) {}
+  public void addDeathAgainst(SevensPlayer other) throws Exception {
+    Record record = this.database.fetchRecord(this, other);
+    this.database.updateRecord(record, 0, 1);
   }
 }

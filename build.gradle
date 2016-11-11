@@ -19,16 +19,38 @@ sourceSets {
             srcDirs = ['src/main']
         }
     }
-    examples {
+    test {
         java {
-            srcDirs = ['src/examples']
+            srcDirs = ['src/test']
         }
+
     }
 }
 
 configurations {
     provided
     compile.extendsFrom provided
+}
+
+task testJar(type: Jar) {
+    baseName = '777-test'
+    manifest {
+        attributes 'Main-Class': 'net.rocketeer.sevens.Tester'
+    }
+    from (sourceSets.main.output) {
+        include "net/rocketeer/sevens/**"
+    }
+    from (sourceSets.test.output) {
+        include "net/rocketeer/sevens/**"
+    }
+    from ('src/main/resources') {
+        include "config.yml"
+        include "init.sql"
+        include "plugin.yml"
+    }
+    from {
+        (configurations.compile - configurations.provided).collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 task bukkitPlugin(type: Jar) {
@@ -40,7 +62,7 @@ task bukkitPlugin(type: Jar) {
     from (sourceSets.main.output) {
         include "net/rocketeer/sevens/**"
     }
-    from ('src/main/resources/bukkit') {
+    from ('src/main/resources') {
         include "config.yml"
         include "init.sql"
         include "plugin.yml"
@@ -56,6 +78,8 @@ dependencies {
     compile group: 'com.mchange', name: 'c3p0', version: '0.9.5.1'
     provided name: 'spigot-api-1.9.4'
     provided name: 'worldguard-6.1.2'
+    provided name: 'ProtocolLib'
+    provided name: 'craftbukkit-1.9.4'
     provided group: 'com.google.code.gson', name: 'gson', version: '2.7'
 }
 

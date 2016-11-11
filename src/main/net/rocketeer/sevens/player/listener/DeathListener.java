@@ -3,6 +3,7 @@ package net.rocketeer.sevens.player.listener;
 import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.SevensPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -21,18 +22,27 @@ public class DeathListener implements Listener {
     this.trackedWorlds = trackedWorlds;
   }
 
-  @EventHandler
-  public void onDeathEvent(PlayerDeathEvent event) throws Exception {
-    if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
-      return;
+  private void logKill(PlayerDeathEvent event) {
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {
-        SevensPlayer killer = this.database.findPlayer(event.getEntity().getKiller().getUniqueId());
+        Player killerPlayer = event.getEntity().getKiller();
         SevensPlayer target = this.database.findPlayer(event.getEntity().getUniqueId());
+        if (killerPlayer == null) {
+          target.addDeathAgainst(target);
+          return;
+        }
+        SevensPlayer killer = this.database.findPlayer(killerPlayer.getUniqueId());
         killer.addKillAgainst(target);
       } catch (Exception e) {
         e.printStackTrace();
       }
     });
+  }
+
+  @EventHandler
+  public void onDeathEvent(PlayerDeathEvent event) throws Exception {
+    if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
+      return;
+    this.logKill(event);
   }
 }
