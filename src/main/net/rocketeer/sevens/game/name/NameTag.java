@@ -48,10 +48,14 @@ public class NameTag {
     vPacket.sendPacket(player);
   }
 
-  public void destroy() {
+  public void destroy(Player player) {
     WrapperPlayServerEntityDestroy destroy = new WrapperPlayServerEntityDestroy();
     destroy.setEntities(new int[] {this.id});
-    this.owner.getWorld().getPlayers().forEach(destroy::sendPacket);
+    destroy.sendPacket(player);
+  }
+
+  public void destroy() {
+    this.owner.getWorld().getPlayers().forEach(this::destroy);
   }
 
   public void create(Player player) {
