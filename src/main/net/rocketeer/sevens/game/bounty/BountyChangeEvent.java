@@ -8,15 +8,19 @@ public class BountyChangeEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
   private final int newBounty;
   private final Player player;
+  private final int oldBounty;
 
-  BountyChangeEvent(Player player, int newBounty) {
+  BountyChangeEvent(Player player, int newBounty, int oldBounty) {
     this.newBounty = newBounty;
+    this.oldBounty = oldBounty;
     this.player = player;
   }
 
-  public int newBounty() {
+  public int bounty() {
     return this.newBounty;
   }
+
+  public int oldBounty() { return this.oldBounty; }
 
   public Player player() {
     return this.player;

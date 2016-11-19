@@ -15,7 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 
-public class NameTagRegistry extends AttributeRegistry {
+public class NameTagRegistry extends AttributeRegistry<NameTag> {
   private final Map<Player, NameTag> nameTagMap = new HashMap<>();
   private final SpatialHashMap<Player> players = new SpatialHashMap<>();
   private final Map<Player, Location> lastLocations = new HashMap<>();
@@ -25,21 +25,23 @@ public class NameTagRegistry extends AttributeRegistry {
     super(name);
   }
 
-  public void registerNameTag(Player player, String name) {
+  public NameTag registerNameTag(Player player, String name) {
     NameTag tag = new NameTag(player, name);
     this.nameTagMap.put(player, tag);
     this.updateTagLocally(tag);
+    return tag;
   }
 
   public void unregisterFakeName(Player player) {
     NameTag tag = this.nameTagMap.get(player);
     if (tag == null)
       return;
-    this.nameTagMap.remove(player);
     tag.destroy();
+    this.nameTagMap.remove(player);
   }
 
-  public NameTag getNameTag(Player player) {
+  @Override
+  public NameTag getAttribute(Player player) {
     return this.nameTagMap.get(player);
   }
 
@@ -55,14 +57,13 @@ public class NameTagRegistry extends AttributeRegistry {
   }
 
   @Override
-  public String getString(Player player) {
-    NameTag tag = this.nameTagMap.get(player);
-    if (tag == null)
-      return null;
-    return tag.toString();
+  protected void disable() {
+    this.nameTagMap.forEach((player, tag) -> tag.destroy());
   }
 
   private void updateTagLocally(NameTag tag) {
+    if (!isActive())
+      return;
     Player target = tag.owner();
     Location loc = target.getLocation();
     Set<Player> nearbyPlayers = players.getWithin(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), 128);
@@ -70,6 +71,7 @@ public class NameTagRegistry extends AttributeRegistry {
     for (Player p : tag.visiblePlayers()) {
       if (!p.getWorld().equals(target.getWorld()) || p.isDead() || target.isDead() || !target.isOnline()) {
         removePlayers.add(p);
+        nearbyPlayers.remove(p);
         continue;
       }
       if (nearbyPlayers.contains(p)) {
@@ -95,6 +97,9 @@ public class NameTagRegistry extends AttributeRegistry {
     @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
       Player player = event.getEntity();
+      Location loc = lastLocations.remove(player);
+      if (loc != null)
+        players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
       NameTag tag = nameTagMap.get(player);
       if (tag == null)
         return;
@@ -117,7 +122,11 @@ public class NameTagRegistry extends AttributeRegistry {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
+      if (!isActive())
+        return;
       Player player = event.getPlayer();
+      if (player.isDead())
+        return;
       Location loc = player.getLocation();
       players.put(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), player);
       Location lastLoc = lastLocations.get(player);

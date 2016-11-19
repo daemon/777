@@ -2,7 +2,12 @@ package net.rocketeer.sevens;
 
 import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.database.SqlStreamExecutor;
+import net.rocketeer.sevens.game.bounty.BountyNameTagListener;
+import net.rocketeer.sevens.game.bounty.BountyRegistry;
 import net.rocketeer.sevens.game.name.NameTagRegistry;
+import net.rocketeer.sevens.game.spree.SpreeConfig;
+import net.rocketeer.sevens.game.spree.SpreeListener;
+import net.rocketeer.sevens.game.spree.SpreeRegistry;
 import net.rocketeer.sevens.player.MySqlPlayerDatabase;
 import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.listener.DeathListener;
@@ -56,6 +61,13 @@ public class SevensPlugin extends JavaPlugin {
     Bukkit.getPluginManager().registerEvents(new DeathListener(this, this.playerDatabase, trackedWorlds), this);
     this.registry = new NameTagRegistry("name");
     registry.init(this);
+    BountyRegistry bRegistry = new BountyRegistry("bounty");
+    bRegistry.init(this);
+    SpreeRegistry sRegistry = new SpreeRegistry("spree");
+    sRegistry.init(this);
+    SpreeConfig config = SpreeConfig.fromConfig(this.getConfig().getConfigurationSection("spree"));
+    Bukkit.getPluginManager().registerEvents(new SpreeListener(config, bRegistry), this);
+    Bukkit.getPluginManager().registerEvents(new BountyNameTagListener(this.registry), this);
     Bukkit.getPluginCommand("ttt").setExecutor(new TestExecutor());
   }
 
@@ -63,6 +75,8 @@ public class SevensPlugin extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] strings) {
       Player player = (Player) sender;
+      if (strings.length == 0)
+        registry.unregisterFakeName(player);
       String nn = strings[0];
       registry.registerNameTag(player, nn);
       return true;

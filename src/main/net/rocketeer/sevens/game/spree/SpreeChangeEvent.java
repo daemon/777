@@ -6,16 +6,22 @@ import org.bukkit.event.HandlerList;
 
 public class SpreeChangeEvent extends Event {
   private static final HandlerList handlers = new HandlerList();
-  private final int newBounty;
+  private final int spree;
   private final Player player;
+  private final int oldSpree;
 
-  SpreeChangeEvent(Player player, int newSpree) {
-    this.newBounty = newSpree;
+  SpreeChangeEvent(Player player, int newSpree, int oldSpree) {
+    this.spree = newSpree;
+    this.oldSpree = oldSpree;
     this.player = player;
   }
 
-  public int newSpree() {
-    return this.newBounty;
+  public int spree() {
+    return this.spree;
+  }
+
+  public int oldSpree() {
+    return this.oldSpree;
   }
 
   public Player player() {

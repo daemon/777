@@ -7,7 +7,7 @@ public interface PlayerDatabase {
   SevensPlayer findPlayer(UUID uuid) throws Exception;
   Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws Exception;
   void updateRecord(Record record, int newKills, int newDeaths) throws Exception;
-  int fetchScore(SevensPlayer player) throws Exception;
+  void updateScore(SevensPlayer player, int addScore) throws Exception;
 
   static byte[] uuidToBytes(UUID uuid) throws IOException {
     ByteArrayOutputStream ba = new ByteArrayOutputStream(16);

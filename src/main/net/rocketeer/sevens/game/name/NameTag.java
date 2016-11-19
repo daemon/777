@@ -69,7 +69,6 @@ public class NameTag {
   }
 
   private void sendDestroy(Player player) {
-    System.out.println(player.getName() + " destroyed");
     WrapperPlayServerEntityDestroy destroy = new WrapperPlayServerEntityDestroy();
     destroy.setEntities(new int[] {this.id});
     destroy.sendPacket(player);

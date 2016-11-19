@@ -3,10 +3,24 @@ package net.rocketeer.sevens.player;
 public class SevensPlayer {
   final int id;
   private final PlayerDatabase database;
+  private final int score;
 
-  SevensPlayer(PlayerDatabase database, int id) {
+  SevensPlayer(PlayerDatabase database, int id, int score) {
     this.id = id;
+    this.score = score;
     this.database = database;
+  }
+
+  public int id() {
+    return this.id;
+  }
+
+  public int score() {
+    return this.score;
+  }
+
+  public void addScore(int points) throws Exception {
+    this.database.updateScore(this, points);
   }
 
   public void addKillAgainst(SevensPlayer other) throws Exception {

@@ -18,33 +18,28 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
     this.manager = manager;
   }
 
-  private static Integer findPlayerId(Connection connection, UUID uuid) throws SQLException, IOException {
-    try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM svns_players WHERE uuid=? FOR UPDATE")) {
-      stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
-      try (ResultSet rs = stmt.executeQuery()) {
-        if (rs.next())
-          return rs.getInt(1);
-      }
-      try (PreparedStatement stmt2 = connection.prepareStatement("INSERT INTO svns_players (uuid) VALUES(?)", Statement.RETURN_GENERATED_KEYS)) {
-        stmt2.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
-        int rows = stmt2.executeUpdate();
-        if (rows == 0)
-          throw new SQLException("Creating player failed!");
-        try (ResultSet rs = stmt2.getGeneratedKeys()) {
-          if (rs.next())
-            return rs.getInt(1);
-          else
-            throw new SQLException("Creating player failed!");
-        }
-      }
-    }
-  }
-
   public SevensPlayer findPlayer(UUID uuid) throws SQLException, IOException {
     try (Connection c = this.manager.getConnection();
          TransactionGuard guard = new TransactionGuard(c)) {
-      Integer id = findPlayerId(c, uuid);
-      return new SevensPlayer(this, id);
+      try (PreparedStatement stmt = c.prepareStatement("SELECT * FROM svns_players WHERE uuid=? FOR UPDATE")) {
+        stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
+        try (ResultSet rs = stmt.executeQuery()) {
+          if (rs.next())
+            return new SevensPlayer(this, rs.getInt(1), rs.getInt(2));
+        }
+        try (PreparedStatement stmt2 = c.prepareStatement("INSERT INTO svns_players (uuid, points) VALUES(?, 0)", Statement.RETURN_GENERATED_KEYS)) {
+          stmt2.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
+          int rows = stmt2.executeUpdate();
+          if (rows == 0)
+            throw new SQLException("Creating player failed!");
+          try (ResultSet rs = stmt2.getGeneratedKeys()) {
+            if (rs.next())
+              return new SevensPlayer(this, rs.getInt(1), 0);
+            else
+              throw new SQLException("Creating player failed!");
+          }
+        }
+      }
     }
   }
 
@@ -93,7 +88,15 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
   }
 
   @Override
-  public int fetchScore(SevensPlayer player) throws Exception {
-    return 0;
+  public void updateScore(SevensPlayer player, int addScore) throws Exception {
+    final String updateScoreStmt = "UPDATE svns_players SET points=points+? WHERE id=?";
+    try (Connection c = this.manager.getConnection();
+         PreparedStatement stmt = c.prepareStatement(updateScoreStmt)) {
+      stmt.setInt(1, addScore);
+      stmt.setInt(2, player.id);
+      int rows = stmt.executeUpdate();
+      if (rows == 0)
+        throw new SQLException("Updating score failed!");
+    }
   }
 }

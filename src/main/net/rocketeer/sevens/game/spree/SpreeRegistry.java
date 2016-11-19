@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SpreeRegistry extends AttributeRegistry {
+public class SpreeRegistry extends AttributeRegistry<Integer> {
   private Map<Player, Integer> playerToSpree = new HashMap<>();
   private int minSpree;
 
@@ -22,11 +22,11 @@ public class SpreeRegistry extends AttributeRegistry {
   @Override
   public void init(JavaPlugin plugin) {
     Bukkit.getPluginManager().registerEvents(new KillListener(), plugin);
-    this.minSpree = plugin.getConfig().getInt("spree-min-kills", 3);
+    this.minSpree = plugin.getConfig().getConfigurationSection("spree").getInt("min-kills", 3);
   }
 
   @Override
-  public Integer getInteger(Player player) {
+  public Integer getAttribute(Player player) {
     return this.playerToSpree.get(player);
   }
 
@@ -43,9 +43,8 @@ public class SpreeRegistry extends AttributeRegistry {
       } else {
         int spree = playerToSpree.get(event.getEntity());
         playerToSpree.put(event.getEntity(), 0);
-        if (spree < minSpree)
-          return;
-        Bukkit.getPluginManager().callEvent(new SpreeChangeEvent(event.getEntity(), 0));
+        if (spree >= minSpree)
+          Bukkit.getPluginManager().callEvent(new SpreeChangeEvent(event.getEntity(), 0, spree));
       }
       Player killer = event.getEntity().getKiller();
       if (killer == null)
@@ -55,7 +54,7 @@ public class SpreeRegistry extends AttributeRegistry {
       int currentSpree = playerToSpree.get(killer) + 1;
       playerToSpree.put(killer, currentSpree);
       if (currentSpree >= minSpree)
-        Bukkit.getPluginManager().callEvent(new SpreeChangeEvent(killer, currentSpree));
+        Bukkit.getPluginManager().callEvent(new SpreeChangeEvent(killer, currentSpree, currentSpree - 1));
     }
   }
 }
