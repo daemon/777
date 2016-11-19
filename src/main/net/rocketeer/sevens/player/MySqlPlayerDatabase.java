@@ -52,6 +52,11 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
   public Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws SQLException {
     final String selectRecordStmtStr = "SELECT kills, deaths FROM svns_record WHERE player1=? AND player2=? FOR UPDATE";
     final String insertRecordStmtStr = "INSERT INTO svns_record (player1, player2, kills, deaths) VALUES (?, ?, 0, 0)";
+    if (player1.id > player2.id) {
+      SevensPlayer tmp = player1;
+      player1 = player2;
+      player2 = tmp;
+    }
     try (Connection c = this.manager.getConnection();
          TransactionGuard guard = new TransactionGuard(c);
          PreparedStatement selectStmt = c.prepareStatement(selectRecordStmtStr)) {
@@ -60,12 +65,6 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       try (ResultSet rs = selectStmt.executeQuery()) {
         if (rs.next())
           return new Record(player1, player2, rs.getInt(1), rs.getInt(2));
-      }
-      selectStmt.setInt(2, player1.id);
-      selectStmt.setInt(1, player2.id);
-      try (ResultSet rs = selectStmt.executeQuery()) {
-        if (rs.next())
-          return new Record(player1, player2, rs.getInt(2), rs.getInt(1));
       }
       try (PreparedStatement insertStmt = c.prepareStatement(insertRecordStmtStr)) {
         insertStmt.setInt(1, player1.id);
@@ -88,13 +87,6 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       stmt.setInt(3, record.player1().id);
       stmt.setInt(4, record.player2().id);
       int rows = stmt.executeUpdate();
-      if (rows != 0)
-        return;
-      stmt.setInt(1, newDeaths);
-      stmt.setInt(2, newKills);
-      stmt.setInt(3, record.player2().id);
-      stmt.setInt(4, record.player1().id);
-      rows = stmt.executeUpdate();
       if (rows == 0)
         throw new SQLException("Updating record failed!");
     }

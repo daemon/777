@@ -4,6 +4,8 @@ import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import net.rocketeer.sevens.net.*;
 import org.bukkit.entity.Player;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public class NameTag {
@@ -11,6 +13,7 @@ public class NameTag {
   private String tag;
   private static int idCounter = 133294;
   private final int id;
+  private final Set<Player> shownPlayers = new HashSet<>();
 
   NameTag(Player owner, String tag) {
     this.owner = owner;
@@ -18,8 +21,20 @@ public class NameTag {
     this.id = ++idCounter;
   }
 
+  public boolean isVisibleTo(Player other) {
+    return this.shownPlayers.contains(other);
+  }
+
+  public Set<Player> visiblePlayers() {
+    return this.shownPlayers;
+  }
+
   public void setTag(String tag) {
     this.tag = tag;
+  }
+
+  public Player owner() {
+    return this.owner;
   }
 
   public void update(Player player) {
@@ -48,17 +63,27 @@ public class NameTag {
     vPacket.sendPacket(player);
   }
 
-  public void destroy(Player player) {
+  public void destroy() {
+    this.shownPlayers.forEach(this::sendDestroy);
+    this.shownPlayers.clear();
+  }
+
+  private void sendDestroy(Player player) {
+    System.out.println(player.getName() + " destroyed");
     WrapperPlayServerEntityDestroy destroy = new WrapperPlayServerEntityDestroy();
     destroy.setEntities(new int[] {this.id});
     destroy.sendPacket(player);
   }
 
-  public void destroy() {
-    this.owner.getWorld().getPlayers().forEach(this::destroy);
+  public void destroy(Player player) {
+    this.shownPlayers.remove(player);
+    this.sendDestroy(player);
   }
 
   public void create(Player player) {
+    if (!player.getWorld().equals(this.owner.getWorld()) || player.equals(this.owner))
+      return;
+    this.shownPlayers.add(player);
     WrapperPlayServerSpawnEntity wrapper = new WrapperPlayServerSpawnEntity();
     wrapper.setEntityID(this.id);
     wrapper.setType(WrapperPlayServerSpawnEntity.ObjectTypes.ARMORSTAND);
@@ -68,21 +93,5 @@ public class NameTag {
     wrapper.setUniqueId(UUID.randomUUID());
     wrapper.sendPacket(player);
     this.update(player);
-  }
-
-  public void create() {
-    for (Player player : this.owner.getWorld().getPlayers()) {
-      if (player.equals(this.owner))
-        continue;
-      this.create(player);
-    }
-  }
-
-  public void update() {
-    for (Player player : this.owner.getWorld().getPlayers()) {
-      if (player.equals(this.owner))
-        continue;
-      this.update(player);
-    }
   }
 }

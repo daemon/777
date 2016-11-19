@@ -7,10 +7,17 @@ public class Record {
   private int deaths;
 
   Record(SevensPlayer player1, SevensPlayer player2, int kills, int deaths) {
-    this.player1 = player1;
-    this.player2 = player2;
-    this.kills = kills;
-    this.deaths = deaths;
+    if (player1.id > player2.id) {
+      this.player1 = player2;
+      this.player2 = player1;
+      this.kills = deaths;
+      this.deaths = kills;
+    } else {
+      this.player1 = player1;
+      this.player2 = player2;
+      this.kills = kills;
+      this.deaths = deaths;
+    }
   }
 
   public int deaths() {
