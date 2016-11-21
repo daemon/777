@@ -1,5 +1,5 @@
 # setwd('C:/Ralph/Programming/777-data')
-records = read.csv('records.csv')
+records = read.csv('records2.csv')
 W <- matrix()
 for (i in 1:nrow(records)) {
 	if (records[i, "player1"] > records[i, "player2"]) {
