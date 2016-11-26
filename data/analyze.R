@@ -1,6 +1,5 @@
 # setwd('C:/Ralph/Programming/777-data')
-records = read.csv('records4.csv')
-W <- matrix()
+records = read.csv('records2.csv')
 for (i in 1:nrow(records)) {
 	if (records[i, "player1"] > records[i, "player2"]) {
 		tmp = records[i, "player1"]
@@ -104,4 +103,4 @@ ranking = rank.mean[order(rank.mean[,2], decreasing=TRUE),]
 ranking$rank = 1:unique.players
 
 # output rank
-write.csv(ranking, file='ranking3.csv')
+write.csv(ranking, file='ranking.csv')
