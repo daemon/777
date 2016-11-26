@@ -1,5 +1,5 @@
 # setwd('C:/Ralph/Programming/777-data')
-records = read.csv('records.csv')
+records = read.csv('records4.csv')
 W <- matrix()
 for (i in 1:nrow(records)) {
 	if (records[i, "player1"] > records[i, "player2"]) {
@@ -20,24 +20,47 @@ tmp = records2$kills
 records2$kills = records2$deaths
 records2$deaths = tmp
 records = rbind(records, records2)
-default.win.rate = qbeta(0.44, mean(records$kills), mean(records$deaths))
-records$win.rate = qbeta(0.44, records$kills + mean(records$kills), records$deaths + mean(records$deaths))
+#default.win.rate = qbeta(0.4, mean(records$kills), mean(records$deaths))
+default.win.rate = qbeta(0.4, mean(records$kills), mean(records$deaths))
+#records$win.rate = (records$kills + 2) / (records$kills + records$deaths + 4)
+records$win.rate = qbeta(0.4, records$kills + mean(records$kills), records$deaths + mean(records$deaths))
 write.csv(records, file='win_records.csv')
 hist(records$win.rate)
 
 # leave-one-out test
-# give 95% CI for mean of errors 
+# Bootstrap
 errors = as.numeric(read.csv('errors.csv', header=FALSE))
-errors.boot = sample(errors, 10000, replace=TRUE)
-errors.ci = tapply(errors.boot, rep(1:1000, 10), mean)
+errors.boot = sample(errors, length(errors) * 10000, replace=TRUE)
+# IQR
+errors.ci = tapply(errors.boot, rep(1:10000, length(errors)), function(x) { return(quantile(x, 0.75) - quantile(x, 0.25))})
+quantile(errors, 0.75) - quantile(errors, 0.25)
+quantile(errors.ci, 0.025)
+quantile(errors.ci, 0.975)
+# mean
+errors.ci = tapply(errors.boot, rep(1:10000, length(errors)), mean)
 mean(errors)
+quantile(errors.ci, 0.025)
+quantile(errors.ci, 0.975)
+# variance
+errors.ci = tapply(errors.boot, rep(1:10000, length(errors)), var)
+var(errors)
 quantile(errors.ci, 0.025)
 quantile(errors.ci, 0.975)
 
 # plot test data against true data
 data = read.csv('inferred_test.csv')
-plot(data[,6], data[,7])
+plot(data[,6], data[,7], xlab='Actual skill', ylab='Predicted skill', xlim=c(0.1, 0.9), ylim=c(0.1, 0.9))
 cor(data[,6], data[,7])
+names(data)[4] = 'one.vs.two'
+names(data)[5] = 'two.vs.three'
+names(data)[6] = 'actual.skill'
+names(data)[7] = 'predicted.skill'
+model = lm(predicted.skill ~ actual.skill, data=data)
+abline(model)
+conf.data = seq(0, 1, 0.05)
+conf.p = predict(model, newdata=data.frame(actual.skill=conf.data), interval=c('confidence'))
+lines(conf.data, conf.p[,2], col='red', lty=2)
+lines(conf.data, conf.p[,3], col='red', lty=2)
 
 # actual ranking
 data = read.csv('inferred_data.csv')
@@ -81,4 +104,4 @@ ranking = rank.mean[order(rank.mean[,2], decreasing=TRUE),]
 ranking$rank = 1:unique.players
 
 # output rank
-write.csv(ranking, file='ranking.csv')
+write.csv(ranking, file='ranking3.csv')

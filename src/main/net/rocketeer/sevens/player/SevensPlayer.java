@@ -25,11 +25,17 @@ public class SevensPlayer {
 
   public void addKillAgainst(SevensPlayer other) throws Exception {
     Record record = this.database.fetchRecord(this, other);
-    this.database.updateRecord(record, 1, 0);
+    if (record.player1().id() == this.id)
+      this.database.updateRecord(record, 1, 0);
+    else
+      this.database.updateRecord(record, 0, 1);
   }
 
   public void addDeathAgainst(SevensPlayer other) throws Exception {
     Record record = this.database.fetchRecord(this, other);
-    this.database.updateRecord(record, 0, 1);
+    if (record.player1().id() == this.id)
+      this.database.updateRecord(record, 0, 1);
+    else
+      this.database.updateRecord(record, 1, 0);
   }
 }

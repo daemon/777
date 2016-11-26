@@ -3,22 +3,26 @@ package net.rocketeer.sevens.game.name;
 import net.rocketeer.sevens.game.AttributeRegistry;
 import net.rocketeer.sevens.game.SpatialHashMap;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class NameTagRegistry extends AttributeRegistry<NameTag> {
   private final Map<Player, NameTag> nameTagMap = new HashMap<>();
   private final SpatialHashMap<Player> players = new SpatialHashMap<>();
   private final Map<Player, Location> lastLocations = new HashMap<>();
+  private final Set<String> worlds = new HashSet<>();
   private JavaPlugin plugin;
 
   public NameTagRegistry(String name) {
@@ -54,6 +58,11 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
   @Override
   public void init(JavaPlugin plugin) {
     Bukkit.getPluginManager().registerEvents(new NameTagListener(), plugin);
+    List<String> worlds = plugin.getConfig().getStringList("worlds");
+    if (worlds == null)
+      return;
+    worlds = worlds.stream().map(String::toLowerCase).collect(Collectors.toList());
+    this.worlds.addAll(worlds);
   }
 
   @Override
@@ -65,6 +74,12 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     if (!isActive())
       return;
     Player target = tag.owner();
+    if (!this.worlds.contains(target.getWorld().getName().toLowerCase())) {
+      Location loc = target.getLocation();
+      this.players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+      this.lastLocations.remove(target);
+      return;
+    }
     Location loc = target.getLocation();
     Set<Player> nearbyPlayers = players.getWithin(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), 128);
     List<Player> removePlayers = new LinkedList<>();
@@ -84,6 +99,16 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     removePlayers.forEach(tag::destroy);
   }
 
+  private void stopTracking(Player player) {
+    Location loc = lastLocations.remove(player);
+    if (loc != null)
+      players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    NameTag tag = nameTagMap.get(player);
+    if (tag == null)
+      return;
+    tag.destroy();
+  }
+
   private class NameTagListener implements Listener {
     @EventHandler
     public void onPlayerRespawnEvent(PlayerRespawnEvent event) {
@@ -95,15 +120,15 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     }
 
     @EventHandler
+    public void onPlayerGameModeChangeEvent(PlayerGameModeChangeEvent event) {
+      if (event.getNewGameMode() != GameMode.SURVIVAL)
+        stopTracking(event.getPlayer());
+    }
+
+    @EventHandler
     public void onPlayerDeathEvent(PlayerDeathEvent event) {
       Player player = event.getEntity();
-      Location loc = lastLocations.remove(player);
-      if (loc != null)
-        players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-      NameTag tag = nameTagMap.get(player);
-      if (tag == null)
-        return;
-      tag.destroy();
+      stopTracking(player);
     }
 
     private int manhattanDistance(Location a, Location b) {

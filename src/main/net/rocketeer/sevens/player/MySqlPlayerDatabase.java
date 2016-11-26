@@ -25,7 +25,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
         try (ResultSet rs = stmt.executeQuery()) {
           if (rs.next())
-            return new SevensPlayer(this, rs.getInt(1), rs.getInt(2));
+            return new SevensPlayer(this, rs.getInt("id"), rs.getInt("points"));
         }
         try (PreparedStatement stmt2 = c.prepareStatement("INSERT INTO svns_players (uuid, points) VALUES(?, 0)", Statement.RETURN_GENERATED_KEYS)) {
           stmt2.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));

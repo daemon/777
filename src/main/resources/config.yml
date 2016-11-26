@@ -15,7 +15,7 @@ spree:
   - '7>&b{name} &6is on a rampage! &7({spree}:0)'
   - '10>&b{name} &6is &aLEGENDARY! &7({spree}:0)'
   - '15>&b{name} &6is &dGODLIKE! &7({spree}:0)'
-  - '20>&b{name} &6is a &dGOD! &7({spree}:0)'
+  - '25>&b{name} &6is a &dGOD! &7({spree}:0)'
   ended-message: '&b{name} &7({spree}:0) &6has lost their spree!'
   bounty-increment: 10
   bounty-multiplier: 1.15

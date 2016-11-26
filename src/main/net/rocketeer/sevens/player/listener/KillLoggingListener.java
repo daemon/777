@@ -11,12 +11,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Set;
 
-public class DeathListener implements Listener {
+public class KillLoggingListener implements Listener {
   private final PlayerDatabase database;
   private final JavaPlugin plugin;
   private final Set<String> trackedWorlds;
 
-  public DeathListener(JavaPlugin plugin, PlayerDatabase database, Set<String> trackedWorlds) {
+  public KillLoggingListener(JavaPlugin plugin, PlayerDatabase database, Set<String> trackedWorlds) {
     this.database = database;
     this.plugin = plugin;
     this.trackedWorlds = trackedWorlds;

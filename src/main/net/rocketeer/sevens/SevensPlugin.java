@@ -1,7 +1,6 @@
 package net.rocketeer.sevens;
 
 import net.rocketeer.sevens.database.DatabaseManager;
-import net.rocketeer.sevens.database.SqlStreamExecutor;
 import net.rocketeer.sevens.game.bounty.BountyNameTagListener;
 import net.rocketeer.sevens.game.bounty.BountyRegistry;
 import net.rocketeer.sevens.game.name.NameTagRegistry;
@@ -10,7 +9,8 @@ import net.rocketeer.sevens.game.spree.SpreeListener;
 import net.rocketeer.sevens.game.spree.SpreeRegistry;
 import net.rocketeer.sevens.player.MySqlPlayerDatabase;
 import net.rocketeer.sevens.player.PlayerDatabase;
-import net.rocketeer.sevens.player.listener.DeathListener;
+import net.rocketeer.sevens.player.listener.BountyLoggingListener;
+import net.rocketeer.sevens.player.listener.KillLoggingListener;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,8 +21,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.beans.PropertyVetoException;
-import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,8 +55,8 @@ public class SevensPlugin extends JavaPlugin {
     }
     List<String> worlds = this.getConfig().getStringList("worlds");
     Set<String> trackedWorlds = new HashSet<>();
-    worlds.forEach(trackedWorlds::add);
-    Bukkit.getPluginManager().registerEvents(new DeathListener(this, this.playerDatabase, trackedWorlds), this);
+    trackedWorlds.addAll(worlds);
+    Bukkit.getPluginManager().registerEvents(new KillLoggingListener(this, this.playerDatabase, trackedWorlds), this);
     this.registry = new NameTagRegistry("name");
     registry.init(this);
     BountyRegistry bRegistry = new BountyRegistry("bounty");
@@ -68,6 +66,7 @@ public class SevensPlugin extends JavaPlugin {
     SpreeConfig config = SpreeConfig.fromConfig(this.getConfig().getConfigurationSection("spree"));
     Bukkit.getPluginManager().registerEvents(new SpreeListener(config, bRegistry), this);
     Bukkit.getPluginManager().registerEvents(new BountyNameTagListener(this.registry), this);
+    Bukkit.getPluginManager().registerEvents(new BountyLoggingListener(this, this.playerDatabase, bRegistry), this);
     Bukkit.getPluginCommand("ttt").setExecutor(new TestExecutor());
   }
 
