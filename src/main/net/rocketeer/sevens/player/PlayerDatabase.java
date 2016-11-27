@@ -1,6 +1,8 @@
 package net.rocketeer.sevens.player;
 
 import java.io.*;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 
 public interface PlayerDatabase {
@@ -8,6 +10,7 @@ public interface PlayerDatabase {
   Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws Exception;
   void updateRecord(Record record, int newKills, int newDeaths) throws Exception;
   void updateScore(SevensPlayer player, int addScore) throws Exception;
+  List<SevensPlayer> fetchTopPlayers(int begin, int nPlayers) throws Exception;
 
   static byte[] uuidToBytes(UUID uuid) throws IOException {
     ByteArrayOutputStream ba = new ByteArrayOutputStream(16);

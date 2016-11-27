@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 public class MySqlPlayerDatabase implements PlayerDatabase {
@@ -25,7 +27,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
         try (ResultSet rs = stmt.executeQuery()) {
           if (rs.next())
-            return new SevensPlayer(this, rs.getInt("id"), rs.getInt("points"));
+            return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"));
         }
         try (PreparedStatement stmt2 = c.prepareStatement("INSERT INTO svns_players (uuid, points) VALUES(?, 0)", Statement.RETURN_GENERATED_KEYS)) {
           stmt2.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
@@ -34,7 +36,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
             throw new SQLException("Creating player failed!");
           try (ResultSet rs = stmt2.getGeneratedKeys()) {
             if (rs.next())
-              return new SevensPlayer(this, rs.getInt(1), 0);
+              return new SevensPlayer(this, uuid, rs.getInt(1), 0);
             else
               throw new SQLException("Creating player failed!");
           }
@@ -97,6 +99,23 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       int rows = stmt.executeUpdate();
       if (rows == 0)
         throw new SQLException("Updating score failed!");
+    }
+  }
+
+  @Override
+  public List<SevensPlayer> fetchTopPlayers(int begin, int nPlayers) throws Exception {
+    final String stmtStr = "SELECT * FROM svns_players ORDER BY points DESC LIMIT ?, ?";
+    try (Connection c = this.manager.getConnection();
+         PreparedStatement stmt = c.prepareStatement(stmtStr)) {
+      stmt.setInt(1, begin);
+      stmt.setInt(2, nPlayers);
+      ResultSet rs = stmt.executeQuery();
+      List<SevensPlayer> players = new LinkedList<>();
+      while (rs.next()) {
+        UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
+        players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points")));
+      }
+      return players;
     }
   }
 }

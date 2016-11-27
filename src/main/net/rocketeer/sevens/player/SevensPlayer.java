@@ -1,14 +1,22 @@
 package net.rocketeer.sevens.player;
 
+import java.util.UUID;
+
 public class SevensPlayer {
   final int id;
   private final PlayerDatabase database;
   private final int score;
+  private final UUID uuid;
 
-  SevensPlayer(PlayerDatabase database, int id, int score) {
+  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score) {
     this.id = id;
     this.score = score;
     this.database = database;
+    this.uuid = uuid;
+  }
+
+  public UUID uuid() {
+    return this.uuid;
   }
 
   public int id() {

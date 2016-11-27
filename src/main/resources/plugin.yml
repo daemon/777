@@ -8,3 +8,13 @@ commands:
     usage: test
     permission: test
     permission-message: test
+  score:
+    description: Shows your current score
+    usage: /score
+    permission: sevens.cmd.score
+    permission-message: You don't have permission to do this!
+  scoretop:
+    description: Lists high score table
+    usage: /scoretop [page number]
+    permission: sevens.cmd.scoretop
+    permission-message: You don't have permission to do this!
