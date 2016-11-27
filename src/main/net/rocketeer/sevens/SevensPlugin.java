@@ -1,6 +1,7 @@
 package net.rocketeer.sevens;
 
 import net.rocketeer.sevens.command.HighScoreCommand;
+import net.rocketeer.sevens.command.ScoreCommand;
 import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.game.bounty.BountyNameTagListener;
 import net.rocketeer.sevens.game.bounty.BountyRegistry;
@@ -39,7 +40,7 @@ public class SevensPlugin extends JavaPlugin {
     String hostname = mysqlCfg.getString("hostname");
     String database = mysqlCfg.getString("database");
     int port = mysqlCfg.getInt("port");
-    String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database;
+    String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database + "?autoReconnect=true";
     this.databaseManager =  new DatabaseManager(url, username, password);
     this.playerDatabase = new MySqlPlayerDatabase(this.databaseManager);
     this.databaseManager.initDatabase();
@@ -70,7 +71,7 @@ public class SevensPlugin extends JavaPlugin {
     Bukkit.getPluginManager().registerEvents(new BountyLoggingListener(this, this.playerDatabase, bRegistry), this);
     Bukkit.getPluginCommand("ttt").setExecutor(new TestExecutor());
     Bukkit.getPluginCommand("scoretop").setExecutor(new HighScoreCommand(this, this.playerDatabase));
-    //Bukkit.getPluginCommand("score").setExecutor(new ScoreCommand(this, this.playerDatabase));
+    Bukkit.getPluginCommand("score").setExecutor(new ScoreCommand(this, this.playerDatabase));
   }
 
   public class TestExecutor implements CommandExecutor {

@@ -42,7 +42,7 @@ public class HighScoreCommand implements CommandExecutor {
           Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(ChatColor.RED + "No records at that page"));
           return;
         }
-        final String fmtStr = "%d. " + ChatColor.AQUA + "%-20s" + ChatColor.GOLD + "%d" + ChatColor.WHITE;
+        final String fmtStr = "%d. " + ChatColor.AQUA + "%s " + ChatColor.GOLD + "%d" + ChatColor.WHITE;
         for (int i = 0; i < players.size(); ++i) {
           SevensPlayer player = players.get(i);
           OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.uuid());

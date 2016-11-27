@@ -5,7 +5,7 @@ mysql:
   database: database
   port: 3306
 worlds:
-  - bendarenas
+  - world
 max-bounty: 1337
 spree:
   min-kills: 3
@@ -17,6 +17,6 @@ spree:
   - '15>&b{name} &6is &dGODLIKE! &7({spree}:0)'
   - '25>&b{name} &6is a &dGOD! &7({spree}:0)'
   ended-message: '&b{name} &7({spree}:0) &6has lost their spree!'
-  bounty-increment: 10
-  bounty-multiplier: 1.15
+  bounty-increment: 8
+  bounty-multiplier: 1
 default-bounty: 10

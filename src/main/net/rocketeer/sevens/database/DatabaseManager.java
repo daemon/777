@@ -21,6 +21,9 @@ public class DatabaseManager {
     this.dataSource.setMaxStatementsPerConnection(16);
     this.dataSource.setAcquireRetryAttempts(10);
     this.dataSource.setAcquireIncrement(2);
+    this.dataSource.setMaxIdleTime(1800);
+    this.dataSource.setIdleConnectionTestPeriod(1500);
+    this.dataSource.setTestConnectionOnCheckin(true);
   }
 
   public Connection getConnection() throws SQLException {

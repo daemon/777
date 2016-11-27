@@ -20,9 +20,9 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
     this.manager = manager;
   }
 
-  public SevensPlayer findPlayer(UUID uuid) throws SQLException, IOException {
+  public SevensPlayer findPlayer(UUID uuid) throws Exception {
     try (Connection c = this.manager.getConnection();
-         TransactionGuard guard = new TransactionGuard(c)) {
+         TransactionGuard<SevensPlayer> guard = new TransactionGuard<>(c, () ->  {
       try (PreparedStatement stmt = c.prepareStatement("SELECT * FROM svns_players WHERE uuid=? FOR UPDATE")) {
         stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
         try (ResultSet rs = stmt.executeQuery()) {
@@ -42,11 +42,13 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
           }
         }
       }
+    })) {
+      return guard.run();
     }
   }
 
   @Override
-  public Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws SQLException {
+  public Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws Exception {
     final String selectRecordStmtStr = "SELECT kills, deaths FROM svns_record WHERE player1=? AND player2=? FOR UPDATE";
     final String insertRecordStmtStr = "INSERT INTO svns_record (player1, player2, kills, deaths) VALUES (?, ?, 0, 0)";
     if (player1.id > player2.id) {
@@ -54,23 +56,28 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       player1 = player2;
       player2 = tmp;
     }
+    final SevensPlayer finalPlayer = player1;
+    final SevensPlayer finalPlayer2 = player2;
     try (Connection c = this.manager.getConnection();
-         TransactionGuard guard = new TransactionGuard(c);
-         PreparedStatement selectStmt = c.prepareStatement(selectRecordStmtStr)) {
-      selectStmt.setInt(1, player1.id);
-      selectStmt.setInt(2, player2.id);
-      try (ResultSet rs = selectStmt.executeQuery()) {
-        if (rs.next())
-          return new Record(player1, player2, rs.getInt(1), rs.getInt(2));
+         TransactionGuard<Record> guard = new TransactionGuard<>(c, () -> {
+      try (PreparedStatement selectStmt = c.prepareStatement(selectRecordStmtStr)) {
+        selectStmt.setInt(1, finalPlayer.id);
+        selectStmt.setInt(2, finalPlayer2.id);
+        try (ResultSet rs = selectStmt.executeQuery()) {
+          if (rs.next())
+            return new Record(finalPlayer, finalPlayer2, rs.getInt(1), rs.getInt(2));
+        }
+        try (PreparedStatement insertStmt = c.prepareStatement(insertRecordStmtStr)) {
+          insertStmt.setInt(1, finalPlayer.id);
+          insertStmt.setInt(2, finalPlayer2.id);
+          int rows = insertStmt.executeUpdate();
+          if (rows == 0)
+            throw new SQLException("Creating record failed!");
+          return new Record(finalPlayer, finalPlayer2, 0, 0);
+        }
       }
-      try (PreparedStatement insertStmt = c.prepareStatement(insertRecordStmtStr)) {
-        insertStmt.setInt(1, player1.id);
-        insertStmt.setInt(2, player2.id);
-        int rows = insertStmt.executeUpdate();
-        if (rows == 0)
-          throw new SQLException("Creating record failed!");
-        return new Record(player1, player2, 0, 0);
-      }
+    })) {
+      return guard.run();
     }
   }
 
@@ -109,13 +116,14 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
          PreparedStatement stmt = c.prepareStatement(stmtStr)) {
       stmt.setInt(1, begin);
       stmt.setInt(2, nPlayers);
-      ResultSet rs = stmt.executeQuery();
-      List<SevensPlayer> players = new LinkedList<>();
-      while (rs.next()) {
-        UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
-        players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points")));
+      try (ResultSet rs = stmt.executeQuery()) {
+        List<SevensPlayer> players = new LinkedList<>();
+        while (rs.next()) {
+          UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
+          players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points")));
+        }
+        return players;
       }
-      return players;
     }
   }
 }
