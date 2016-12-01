@@ -1,5 +1,6 @@
 package net.rocketeer.sevens.command;
 
+import net.rocketeer.sevens.game.name.StaticTagManager;
 import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.SevensPlayer;
 import org.bukkit.Bukkit;
@@ -21,24 +22,32 @@ public class ScoreCommand implements CommandExecutor {
   }
 
   public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
+    OfflinePlayer lookupPlayer = null;
     if (args.length > 0) {
       String lookupPlayerName = args[0];
-      OfflinePlayer lookupPlayer = Bukkit.getOfflinePlayer(lookupPlayerName);
+      lookupPlayer = Bukkit.getOfflinePlayer(lookupPlayerName);
       if (lookupPlayer == null) {
         sender.sendMessage(ChatColor.RED + "Player not found!");
         return true;
       }
     }
-    if (!(sender instanceof Player))
+
+    if (sender instanceof Player && lookupPlayer == null)
+      lookupPlayer = (OfflinePlayer) sender;
+    else if (lookupPlayer == null)
       return true;
-    Player player = (Player) sender;
+    final OfflinePlayer finalLookupPlayer = lookupPlayer;
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {
-        SevensPlayer sPlayer = this.database.findPlayer(player.getUniqueId());
-        Bukkit.getScheduler().runTask(this.plugin, () -> player.sendMessage("Score: " + ChatColor.AQUA + sPlayer.score()));
+        SevensPlayer sPlayer = this.database.findPlayer(finalLookupPlayer.getUniqueId(), false);
+        if (sPlayer == null) {
+          sender.sendMessage(ChatColor.RED + "Player not found!");
+          return;
+        }
+        Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage("Total score: " + ChatColor.GOLD + sPlayer.score()));
       } catch (Exception e) {
         e.printStackTrace();
-        Bukkit.getScheduler().runTask(this.plugin, () -> player.sendMessage(ChatColor.RED + "Error retrieving score!"));
+        Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(ChatColor.RED + "Error retrieving score!"));
       }
     });
     return true;

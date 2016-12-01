@@ -30,18 +30,19 @@ public class HighScoreCommand implements CommandExecutor {
         page = Integer.parseInt(args[0]) - 1;
       } catch (Exception ignored) {}
     if (page < 0) {
-      sender.sendMessage(ChatColor.RED + "Page number must be non-negative!");
+      sender.sendMessage(ChatColor.RED + "Page number must be positive!");
       return false;
     }
     final int finalPage = page;
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {
         List<SevensPlayer> players = this.database.fetchTopPlayers(finalPage * 10, 10);
-        StringJoiner joiner = new StringJoiner("\n");
         if (players.size() == 0) {
-          Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(ChatColor.RED + "No records at that page"));
+          Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(ChatColor.RED + "No records on that page"));
           return;
         }
+        StringJoiner joiner = new StringJoiner("\n");
+        joiner.add("Page " + (finalPage + 1));
         final String fmtStr = "%d. " + ChatColor.AQUA + "%s " + ChatColor.GOLD + "%d" + ChatColor.WHITE;
         for (int i = 0; i < players.size(); ++i) {
           SevensPlayer player = players.get(i);
