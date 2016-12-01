@@ -5,7 +5,9 @@ import net.rocketeer.sevens.command.ScoreCommand;
 import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.game.bounty.BountyNameTagListener;
 import net.rocketeer.sevens.game.bounty.BountyRegistry;
+import net.rocketeer.sevens.game.bounty.BountyRewardEvent;
 import net.rocketeer.sevens.game.name.NameTagRegistry;
+import net.rocketeer.sevens.game.name.StaticTagManager;
 import net.rocketeer.sevens.game.spree.SpreeConfig;
 import net.rocketeer.sevens.game.spree.SpreeListener;
 import net.rocketeer.sevens.game.spree.SpreeRegistry;
@@ -14,12 +16,8 @@ import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.listener.BountyLoggingListener;
 import net.rocketeer.sevens.player.listener.KillLoggingListener;
 import org.bukkit.Bukkit;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.beans.PropertyVetoException;
@@ -31,6 +29,7 @@ public class SevensPlugin extends JavaPlugin {
   private DatabaseManager databaseManager;
   private PlayerDatabase playerDatabase;
   private NameTagRegistry registry;
+  private StaticTagManager tagManager;
 
   public void initDatabase() throws PropertyVetoException {
     FileConfiguration config = this.getConfig();
@@ -65,29 +64,18 @@ public class SevensPlugin extends JavaPlugin {
     bRegistry.init(this);
     SpreeRegistry sRegistry = new SpreeRegistry("spree");
     sRegistry.init(this);
+    // TODO refactor code
     SpreeConfig config = SpreeConfig.fromConfig(this.getConfig().getConfigurationSection("spree"));
     Bukkit.getPluginManager().registerEvents(new SpreeListener(config, bRegistry), this);
     Bukkit.getPluginManager().registerEvents(new BountyNameTagListener(this.registry), this);
-    Bukkit.getPluginManager().registerEvents(new BountyLoggingListener(this, this.playerDatabase, bRegistry), this);
-    Bukkit.getPluginCommand("ttt").setExecutor(new TestExecutor());
+    Bukkit.getPluginManager().registerEvents(new BountyLoggingListener(this, this.playerDatabase), this);
     Bukkit.getPluginCommand("scoretop").setExecutor(new HighScoreCommand(this, this.playerDatabase));
     Bukkit.getPluginCommand("score").setExecutor(new ScoreCommand(this, this.playerDatabase));
-  }
-
-  public class TestExecutor implements CommandExecutor {
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String s, String[] strings) {
-      Player player = (Player) sender;
-      if (strings.length == 0)
-        registry.unregisterFakeName(player);
-      String nn = strings[0];
-      registry.registerNameTag(player, nn);
-      return true;
-    }
+    this.tagManager = new StaticTagManager(this);
   }
 
   @Override
   public void onDisable() {
-
+    this.tagManager.despawnAll();
   }
 }
