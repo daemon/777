@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface PlayerDatabase {
-  SevensPlayer findPlayer(UUID uuid) throws Exception;
+  SevensPlayer findPlayer(UUID uuid, boolean createIfNotExists) throws Exception;
   Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws Exception;
   void updateRecord(Record record, int newKills, int newDeaths) throws Exception;
   void updateScore(SevensPlayer player, int addScore) throws Exception;

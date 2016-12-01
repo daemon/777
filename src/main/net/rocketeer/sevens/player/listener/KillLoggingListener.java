@@ -26,12 +26,12 @@ public class KillLoggingListener implements Listener {
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {
         Player killerPlayer = event.getEntity().getKiller();
-        SevensPlayer target = this.database.findPlayer(event.getEntity().getUniqueId());
+        SevensPlayer target = this.database.findPlayer(event.getEntity().getUniqueId(), true);
         if (killerPlayer == null) {
           target.addDeathAgainst(target);
           return;
         }
-        SevensPlayer killer = this.database.findPlayer(killerPlayer.getUniqueId());
+        SevensPlayer killer = this.database.findPlayer(killerPlayer.getUniqueId(), true);
         killer.addKillAgainst(target);
       } catch (Exception e) {
         e.printStackTrace();

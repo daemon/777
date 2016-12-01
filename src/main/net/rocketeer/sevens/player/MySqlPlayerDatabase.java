@@ -20,7 +20,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
     this.manager = manager;
   }
 
-  public SevensPlayer findPlayer(UUID uuid) throws Exception {
+  public SevensPlayer findPlayer(UUID uuid, boolean createIfNotExists) throws Exception {
     try (Connection c = this.manager.getConnection();
          TransactionGuard<SevensPlayer> guard = new TransactionGuard<>(c, () ->  {
       try (PreparedStatement stmt = c.prepareStatement("SELECT * FROM svns_players WHERE uuid=? FOR UPDATE")) {
@@ -28,6 +28,8 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         try (ResultSet rs = stmt.executeQuery()) {
           if (rs.next())
             return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"));
+          else if (!createIfNotExists)
+            return null;
         }
         try (PreparedStatement stmt2 = c.prepareStatement("INSERT INTO svns_players (uuid, points) VALUES(?, 0)", Statement.RETURN_GENERATED_KEYS)) {
           stmt2.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
