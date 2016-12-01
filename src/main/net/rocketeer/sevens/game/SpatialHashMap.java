@@ -2,11 +2,16 @@ package net.rocketeer.sevens.game;
 
 import java.util.*;
 
-// Sacrifices accuracy for speed. Designed for small (< 128) radius lookups and precise to 16 blocks.
+// Sacrifices accuracy for speed. Designed for small (< 128) radius lookups and precise to 32 blocks.
 // The best use case is for spaces with high concentrations of data points in sparse, irregular clusters.
 public class SpatialHashMap<ValueType> {
   private Map<RadiusKey, Map<ExactKey, ValueType>> store = new HashMap<>();
-  private final int radius = 16;
+  private final int radius = 32;
+  private int size = 0;
+
+  public int size() {
+    return this.size;
+  }
 
   public void put(int x, int y, int z, ValueType value) {
     RadiusKey key = new RadiusKey(x, y, z, this.radius);
@@ -16,6 +21,8 @@ public class SpatialHashMap<ValueType> {
       this.store.put(key, map);
     }
 
+    if (map.get(new ExactKey(x, y, z)) == null)
+      ++size;
     map.put(new ExactKey(x, y, z), value);
   }
 
@@ -30,7 +37,8 @@ public class SpatialHashMap<ValueType> {
     Map<ExactKey, ValueType> bucket = this.store.get(new RadiusKey(x, y, z, this.radius));
     if (bucket == null)
       return;
-    bucket.remove(new ExactKey(x, y, z));
+    if (bucket.remove(new ExactKey(x, y, z)) != null)
+      --size;
   }
 
   public Set<ValueType> getWithin(int x, int y, int z, int radius) {
@@ -49,6 +57,7 @@ public class SpatialHashMap<ValueType> {
 
   public void clear() {
     this.store.clear();
+    this.size = 0;
   }
 
   private static class ExactKey {

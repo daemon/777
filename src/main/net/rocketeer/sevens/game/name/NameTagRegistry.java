@@ -9,10 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
@@ -74,14 +71,12 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     if (!isActive())
       return;
     Player target = tag.owner();
-    if (!this.worlds.contains(target.getWorld().getName().toLowerCase())) {
-      Location loc = target.getLocation();
-      this.players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-      this.lastLocations.remove(target);
+    if (!this.worlds.contains(target.getWorld().getName().toLowerCase()) || target.getGameMode() != GameMode.SURVIVAL) {
+      this.stopTracking(target);
       return;
     }
     Location loc = target.getLocation();
-    Set<Player> nearbyPlayers = players.getWithin(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), 128);
+    Set<Player> nearbyPlayers = players.getWithin(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), 64);
     List<Player> removePlayers = new LinkedList<>();
     for (Player p : tag.visiblePlayers()) {
       if (!p.getWorld().equals(target.getWorld()) || p.isDead() || target.isDead() || !target.isOnline()) {
@@ -100,9 +95,11 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
   }
 
   private void stopTracking(Player player) {
-    Location loc = lastLocations.remove(player);
+    Location loc = player.getLocation();
+    this.players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    loc = lastLocations.remove(player);
     if (loc != null)
-      players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+      this.players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     NameTag tag = nameTagMap.get(player);
     if (tag == null)
       return;
@@ -117,6 +114,13 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
       if (tag == null)
         return;
       updateTagLocally(tag);
+    }
+
+    @EventHandler
+    public void onChangeWorldEvent(PlayerChangedWorldEvent event) {
+      if (worlds.contains(event.getPlayer().getWorld().getName().toLowerCase()))
+        return;
+      stopTracking(event.getPlayer());
     }
 
     @EventHandler
@@ -138,11 +142,7 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     @EventHandler
     public void onPlayerLeave(PlayerQuitEvent event) {
       Player player = event.getPlayer();
-      Location loc = player.getLocation();
-      players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-      NameTag tag = nameTagMap.remove(player);
-      if (tag != null)
-        tag.destroy();
+      stopTracking(player);
     }
 
     @EventHandler

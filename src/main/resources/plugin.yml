@@ -3,11 +3,6 @@ main: net.rocketeer.sevens.SevensPlugin
 version: 0.0.1
 depend: [WorldEdit,WorldGuard,ProtocolLib]
 commands:
-  ttt:
-    description: test
-    usage: test
-    permission: test
-    permission-message: test
   score:
     description: Shows your current score
     usage: /score [player name]
