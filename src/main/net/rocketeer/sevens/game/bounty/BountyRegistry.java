@@ -69,7 +69,7 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
       playerToBounty.remove(event.getPlayer());
     }
 
-    @EventHandler(priority= EventPriority.LOWEST)
+    @EventHandler(priority=EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
       Player killer = event.getEntity().getKiller();
       Player player = event.getEntity();
@@ -77,7 +77,7 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
       initBounty(player);
       if (killer == null)
         return;
-      Bukkit.getPluginManager().callEvent(new BountyRewardEvent(killer, bounty));
+      Bukkit.getPluginManager().callEvent(new BountyRewardEvent(killer, bounty, BountyRewardEvent.Cause.KILL));
     }
   }
 }

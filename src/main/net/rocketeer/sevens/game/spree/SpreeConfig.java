@@ -11,23 +11,17 @@ public class SpreeConfig {
   private final Map<Integer, String> spreeMessages;
   private final String spreeEndedMessage;
   private final int bountyIncrement;
-  private final double bountyMultiplier;
   private final int maxMessageBounty;
 
-  public SpreeConfig(Map<Integer, String> spreeMessages, String spreeEndedMessage, int bountyIncrement, double bountyMultiplier, int maxMessageBounty) {
+  public SpreeConfig(Map<Integer, String> spreeMessages, String spreeEndedMessage, int bountyIncrement, int maxMessageBounty) {
     this.spreeMessages = spreeMessages;
     this.spreeEndedMessage = spreeEndedMessage;
     this.bountyIncrement = bountyIncrement;
-    this.bountyMultiplier = bountyMultiplier;
     this.maxMessageBounty = maxMessageBounty;
   }
 
   public int bountyIncrement() {
      return this.bountyIncrement;
-  }
-
-  public double bountyMultiplier() {
-    return this.bountyMultiplier;
   }
 
   public Map<Integer, String> spreeMessages() {
@@ -61,7 +55,6 @@ public class SpreeConfig {
     }
     String endedMessage = ChatColor.translateAlternateColorCodes('&', config.getString("ended-message"));
     int bountyIncrement = config.getInt("bounty-increment");
-    double bountyMultiplier = config.getDouble("bounty-multiplier");
-    return new SpreeConfig(spreeMessages, endedMessage, bountyIncrement, bountyMultiplier, maxMessageBounty);
+    return new SpreeConfig(spreeMessages, endedMessage, bountyIncrement, maxMessageBounty);
   }
 }

@@ -5,19 +5,26 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 public class BountyRewardEvent extends Event {
+  public enum Cause {KILL}
+  private final Cause cause;
   private static final HandlerList handlers = new HandlerList();
-  private final int bountyReward;
-  private final Player player;
+  private int bountyReward;
+  private Player player;
 
-  BountyRewardEvent(Player player, int bountyReward) {
+  BountyRewardEvent(Player player, int bountyReward, Cause cause) {
     this.player = player;
     this.bountyReward = bountyReward;
+    this.cause = cause;
   }
 
   public int bountyReward() { return this.bountyReward; }
 
   public Player player() {
     return this.player;
+  }
+
+  public Cause cause() {
+    return this.cause;
   }
 
   public static HandlerList getHandlerList() {
