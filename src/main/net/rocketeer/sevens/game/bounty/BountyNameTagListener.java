@@ -15,7 +15,7 @@ public class BountyNameTagListener implements Listener {
 
   @EventHandler
   public void onBountyChange(BountyChangeEvent event) {
-    String bountyStr = "(" + ChatColor.AQUA + event.bounty() + ChatColor.WHITE + ")";
+    String bountyStr = "(" + ChatColor.GOLD + event.bounty() + ChatColor.WHITE + ")";
     NameTag tag = this.registry.getAttribute(event.player());
     if (tag == null) {
       tag = this.registry.registerNameTag(event.player(), bountyStr);

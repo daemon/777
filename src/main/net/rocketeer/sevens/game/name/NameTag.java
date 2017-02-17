@@ -2,6 +2,7 @@ package net.rocketeer.sevens.game.name;
 
 import com.comphenix.protocol.wrappers.WrappedDataWatcher;
 import net.rocketeer.sevens.net.*;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
@@ -14,6 +15,9 @@ public class NameTag {
   private static int idCounter = 133294;
   private final int id;
   private final Set<Player> shownPlayers = new HashSet<>();
+  private WrappedDataWatcher watcher = new WrappedDataWatcher();
+  private WrappedDataWatcher.Serializer ss;
+  private boolean inCall = false;
 
   NameTag(Player owner, String tag) {
     this.owner = owner;
@@ -21,6 +25,24 @@ public class NameTag {
     if (idCounter == Integer.MAX_VALUE)
       idCounter = 133294;
     this.id = ++idCounter;
+    this.initWatcher();
+    Bukkit.getPluginManager().callEvent(new NameTagChangeEvent(this));
+  }
+
+  @Override
+  public String toString() {
+    return this.tag;
+  }
+
+  private void initWatcher() {
+    this.ss = WrappedDataWatcher.Registry.get(String.class);
+    WrappedDataWatcher.Serializer bs = WrappedDataWatcher.Registry.get(Byte.class);
+    WrappedDataWatcher.Serializer bls = WrappedDataWatcher.Registry.get(Boolean.class);
+    this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, bs), (byte) 0x20);
+    this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, this.ss), this.tag);
+    this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, bls), true);
+    byte byteData = 0x01 | 0x08 | 0x10;
+    this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(10, bs), byteData);
   }
 
   public boolean isVisibleTo(Player other) {
@@ -33,6 +55,21 @@ public class NameTag {
 
   public void setTag(String tag) {
     this.tag = tag;
+    this.visiblePlayers().forEach(player -> {
+      watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, this.ss), this.tag);
+      WrapperPlayServerEntityMetadata metadata = new WrapperPlayServerEntityMetadata();
+      metadata.setEntityID(this.id);
+      metadata.setMetadata(watcher.getWatchableObjects());
+      metadata.sendPacket(player);
+    });
+    if (this.inCall)
+      return;
+    this.inCall = true;
+    try {
+      Bukkit.getPluginManager().callEvent(new NameTagChangeEvent(this));
+    } finally {
+      this.inCall = false;
+    }
   }
 
   public Player owner() {
@@ -40,21 +77,6 @@ public class NameTag {
   }
 
   public void update(Player player) {
-    WrapperPlayServerEntityMetadata metadata = new WrapperPlayServerEntityMetadata();
-    metadata.setEntityID(this.id);
-    WrappedDataWatcher.Serializer ss = WrappedDataWatcher.Registry.get(String.class);
-    WrappedDataWatcher.Serializer bs = WrappedDataWatcher.Registry.get(Byte.class);
-    WrappedDataWatcher.Serializer bls = WrappedDataWatcher.Registry.get(Boolean.class);
-    WrappedDataWatcher watcher = new WrappedDataWatcher();
-    watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(0, bs), (byte) 0x20);
-    watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, ss), this.tag);
-    watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, bls), true);
-    WrappedDataWatcher.Serializer fs = WrappedDataWatcher.Registry.get(Float.class);
-    // watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(9, fs), (float) 10.0);
-    byte byteData = 0x01 | 0x08 | 0x10;
-    watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(10, bs), byteData);
-    metadata.setMetadata(watcher.getWatchableObjects());
-    metadata.sendPacket(player);
     WrapperPlayServerEntityTeleport tpPacket = new WrapperPlayServerEntityTeleport();
     tpPacket.setEntityID(this.id);
     tpPacket.setX(this.owner.getLocation().getX());
@@ -97,6 +119,10 @@ public class NameTag {
     wrapper.setZ(this.owner.getLocation().getZ());
     wrapper.setUniqueId(UUID.randomUUID());
     wrapper.sendPacket(player);
+    WrapperPlayServerEntityMetadata metadata = new WrapperPlayServerEntityMetadata();
+    metadata.setEntityID(this.id);
+    metadata.setMetadata(watcher.getWatchableObjects());
+    metadata.sendPacket(player);
     this.update(player);
   }
 }

@@ -16,7 +16,7 @@ public class SpreeListener implements Listener {
   private final BountyRegistry bountyRegistry;
   private final SpreeConfig config;
   private Map<Player, Long> killTimestamps = new HashMap<>();
-  private Map<Player, Double> killMultiplier = new HashMap<>();
+  private Map<Player, Double> killMultipliers = new HashMap<>();
   private long lastKilled = System.currentTimeMillis();
 
   public SpreeListener(SpreeConfig config, BountyRegistry bountyRegistry) {
@@ -42,19 +42,23 @@ public class SpreeListener implements Listener {
       Bukkit.broadcastMessage(message);
       return;
     }
-    if (System.currentTimeMillis() - this.lastKilled > 60000) {
+    if (System.currentTimeMillis() - this.lastKilled > 50000) {
       this.killTimestamps.clear();
-      this.killMultiplier.clear();
+      this.killMultipliers.clear();
     }
     this.lastKilled = System.currentTimeMillis();
     Player player = event.player();
     Long timestamp = this.killTimestamps.get(player);
-    if (timestamp == null || System.currentTimeMillis() - timestamp > 60000) {
+    double multiplier = 1.0;
+    if (timestamp == null || System.currentTimeMillis() - timestamp > 50000) {
       this.killTimestamps.put(player, System.currentTimeMillis());
-      this.killMultiplier.put(player, 1.0);
+      this.killMultipliers.put(player, 1.0);
+    } else {
+      multiplier = this.killMultipliers.get(player);
+      multiplier *= 0.75;
+      this.killMultipliers.put(player, multiplier);
     }
-    Double multiplier = this.killMultiplier.get(player);
-    multiplier *= 0.75;
+    this.killTimestamps.put(player, System.currentTimeMillis());
     String message = this.config.spreeMessages().get(event.spree());
     int bounty = this.bountyRegistry.getAttribute(event.player());
     this.bountyRegistry.setAttribute(event.player(), (int) (bounty + multiplier * this.config.bountyIncrement()));

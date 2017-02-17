@@ -128,4 +128,12 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       }
     }
   }
+
+  @Override
+  public void resetAllScores() throws Exception {
+    try (Connection c = this.manager.getConnection();
+         java.sql.Statement stmt = c.createStatement()) {
+      stmt.execute("UPDATE svns_players SET points=0");
+    }
+  }
 }

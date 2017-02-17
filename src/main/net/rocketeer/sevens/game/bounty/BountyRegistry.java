@@ -77,6 +77,8 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
       initBounty(player);
       if (killer == null)
         return;
+      if (player.equals(killer))
+        return;
       Bukkit.getPluginManager().callEvent(new BountyRewardEvent(killer, bounty, BountyRewardEvent.Cause.KILL));
     }
   }

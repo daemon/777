@@ -19,10 +19,8 @@ tmp = records2$kills
 records2$kills = records2$deaths
 records2$deaths = tmp
 records = rbind(records, records2)
-#default.win.rate = qbeta(0.4, mean(records$kills), mean(records$deaths))
-default.win.rate = qbeta(0.4, mean(records$kills), mean(records$deaths))
-#records$win.rate = (records$kills + 2) / (records$kills + records$deaths + 4)
-records$win.rate = qbeta(0.4, records$kills + mean(records$kills), records$deaths + mean(records$deaths))
+default.win.rate = qbeta(0.44, mean(records$kills), mean(records$deaths))
+records$win.rate = qbeta(0.44, records$kills + mean(records$kills), records$deaths + mean(records$deaths))
 write.csv(records, file='win_records.csv')
 hist(records$win.rate)
 
@@ -50,6 +48,7 @@ quantile(errors.ci, 0.975)
 data = read.csv('inferred_test.csv')
 plot(data[,6], data[,7], xlab='Actual skill', ylab='Predicted skill', xlim=c(0.1, 0.9), ylim=c(0.1, 0.9))
 cor(data[,6], data[,7])
+text(c(0.1, 0.1), cor(data[,6], data[,7]))
 names(data)[4] = 'one.vs.two'
 names(data)[5] = 'two.vs.three'
 names(data)[6] = 'actual.skill'
@@ -61,7 +60,7 @@ conf.p = predict(model, newdata=data.frame(actual.skill=conf.data), interval=c('
 lines(conf.data, conf.p[,2], col='red', lty=2)
 lines(conf.data, conf.p[,3], col='red', lty=2)
 
-# actual ranking
+# Read inferred data
 data = read.csv('inferred_data.csv')
 j = nrow(records) + 1
 for (i in 1:nrow(data)) {
@@ -73,6 +72,7 @@ for (i in 1:nrow(data)) {
   j = j + 1
 }
 
+# Calculate rating as specified
 records = records[order(records[,1]),]
 unique.players = length(unique(c(records[,1], records[,2])))
 rank.mean1 = aggregate(win.rate ~ player1, records, mean)

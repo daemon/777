@@ -1,7 +1,7 @@
 name: 777
 main: net.rocketeer.sevens.SevensPlugin
 version: 0.0.1
-depend: [WorldEdit,WorldGuard,ProtocolLib]
+depend: [WorldGuard,ProtocolLib]
 commands:
   score:
     description: Shows your current score
@@ -12,4 +12,19 @@ commands:
     description: Lists high score table
     usage: /scoretop [page number]
     permission: sevens.cmd.scoretop
+    permission-message: You don't have permission to do this!
+  bounty:
+    description: Shows your current bounty or adds bounty to other people
+    usage: /bounty [add [player name] bounty]
+    permission: sevens.cmd.bounty
+    permission-message: You don't have permission to do this!
+  spree:
+    description: Shows your current spree
+    usage: /spree
+    permission: sevens.cmd.spree
+    permission-message: You don't have permission to do this!
+  scoreresetall:
+    description: New month of bending. DO NOT USE IF YOU DON'T KNOW WHAT IT DOES
+    usage: /scoreresetall
+    permission: sevens.admin
     permission-message: You don't have permission to do this!

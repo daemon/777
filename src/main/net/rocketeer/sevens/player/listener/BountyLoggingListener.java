@@ -13,14 +13,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class BountyLoggingListener implements Listener {
   private final PlayerDatabase database;
   private final JavaPlugin plugin;
+  private final Set<String> trackedWorlds;
 
-  public BountyLoggingListener(JavaPlugin plugin, PlayerDatabase database) {
+  public BountyLoggingListener(JavaPlugin plugin, PlayerDatabase database, Set<String> trackedWorlds) {
     this.database = database;
     this.plugin = plugin;
+    this.trackedWorlds = trackedWorlds;
   }
 
   private Map<Player, Long> killTimestamps = new HashMap<>();
@@ -30,26 +33,29 @@ public class BountyLoggingListener implements Listener {
   private int getPoints(BountyRewardEvent event) {
     if (event.cause() != BountyRewardEvent.Cause.KILL)
       return event.bountyReward();
-    if (System.currentTimeMillis() - this.lastKilled > 60000) {
+    if (System.currentTimeMillis() - this.lastKilled > 50000) {
       this.killTimestamps.clear();
       this.killMultipliers.clear();
     }
     this.lastKilled = System.currentTimeMillis();
     Player player = event.player();
     Long timestamp = this.killTimestamps.get(player);
-    if (timestamp == null || System.currentTimeMillis() - timestamp > 60000) {
+    if (timestamp == null || System.currentTimeMillis() - timestamp > 50000) {
       this.killTimestamps.put(player, System.currentTimeMillis());
       this.killMultipliers.put(player, 1.0);
       return event.bountyReward();
     }
     Double multiplier = this.killMultipliers.get(player);
     multiplier *= 0.75;
+    this.killTimestamps.put(player, System.currentTimeMillis());
     this.killMultipliers.put(player, multiplier);
     return (int) (multiplier * event.bountyReward());
   }
 
   @EventHandler
   public void onBountyRewardEvent(BountyRewardEvent event) {
+    if (!this.trackedWorlds.contains(event.player().getWorld().getName().toLowerCase()))
+      return;
     final int points = this.getPoints(event);
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {

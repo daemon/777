@@ -2,6 +2,7 @@ package net.rocketeer.sevens.command;
 
 import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.SevensPlayer;
+import net.rocketeer.sevens.player.SyncPlayerMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -37,24 +38,26 @@ public class HighScoreCommand implements CommandExecutor {
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {
         List<SevensPlayer> players = this.database.fetchTopPlayers(finalPage * 10, 10);
-        if (players.size() == 0) {
-          Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(ChatColor.RED + "No records on that page"));
-          return;
-        }
-        StringJoiner joiner = new StringJoiner("\n");
-        joiner.add("Page " + (finalPage + 1));
-        final String fmtStr = "%d. " + ChatColor.AQUA + "%s " + ChatColor.GOLD + "%d" + ChatColor.WHITE;
-        for (int i = 0; i < players.size(); ++i) {
-          SevensPlayer player = players.get(i);
-          OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.uuid());
-          if (offlinePlayer == null)
-            continue;
-          joiner.add(String.format(fmtStr, finalPage * 10 + i + 1, offlinePlayer.getName(), player.score()));
-        }
-        Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(joiner.toString()));
+        Bukkit.getScheduler().runTask(this.plugin, () -> {
+          if (players.size() == 0) {
+            new SyncPlayerMessage(this.plugin, sender, ChatColor.RED + "No records on that page").send();
+            return;
+          }
+          StringJoiner joiner = new StringJoiner("\n");
+          joiner.add("Page " + (finalPage + 1));
+          final String fmtStr = "%d. " + ChatColor.AQUA + "%s " + ChatColor.GOLD + "%d" + ChatColor.WHITE;
+          for (int i = 0; i < players.size(); ++i) {
+            SevensPlayer player = players.get(i);
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.uuid());
+            if (offlinePlayer == null)
+              continue;
+            joiner.add(String.format(fmtStr, finalPage * 10 + i + 1, offlinePlayer.getName(), player.score()));
+          }
+          new SyncPlayerMessage(this.plugin, sender, joiner.toString()).send();
+        });
       } catch (Exception e) {
         e.printStackTrace();
-        Bukkit.getScheduler().runTask(this.plugin, () -> sender.sendMessage(ChatColor.RED + "Error fetching high score list"));
+        new SyncPlayerMessage(this.plugin, sender, ChatColor.RED + "Error fetching high score list").send();
       }
     });
     return true;
