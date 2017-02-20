@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,7 +72,9 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     if (!isActive())
       return;
     Player target = tag.owner();
-    if (!this.worlds.contains(target.getWorld().getName().toLowerCase()) || target.getGameMode() != GameMode.SURVIVAL) {
+
+    boolean invisible = target.hasPotionEffect(PotionEffectType.INVISIBILITY);
+    if (!this.worlds.contains(target.getWorld().getName().toLowerCase()) || target.getGameMode() != GameMode.SURVIVAL || invisible) {
       this.stopTracking(target);
       return;
     }
