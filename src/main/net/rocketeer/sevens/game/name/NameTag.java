@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public class NameTag {
+  private static int ServerVersion = 9;
+
   private final Player owner;
   private String tag;
   private static int idCounter = 133294;
@@ -18,6 +20,14 @@ public class NameTag {
   private WrappedDataWatcher watcher = new WrappedDataWatcher();
   private WrappedDataWatcher.Serializer ss;
   private boolean inCall = false;
+
+  static {
+    try {
+      ServerVersion = Integer.parseInt(Bukkit.getServer().getClass().getPackage().getName().substring(23).split("_")[1]);
+    } catch (Exception e) {
+      ServerVersion = 9;
+    }
+  }
 
   NameTag(Player owner, String tag) {
     this.owner = owner;
@@ -42,7 +52,8 @@ public class NameTag {
     this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(2, this.ss), this.tag);
     this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, bls), true);
     byte byteData = 0x01 | 0x08 | 0x10;
-    this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(10, bs), byteData);
+    int maskIndex = (ServerVersion > 9) ? 11 : 10;
+    this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(maskIndex, bs), byteData);
   }
 
   public boolean isVisibleTo(Player other) {
