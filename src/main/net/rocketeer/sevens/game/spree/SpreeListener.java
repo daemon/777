@@ -66,6 +66,8 @@ public class SpreeListener implements Listener {
       return;
     else if (event.spree() > this.config.maxMessageBounty() && event.spree() % 5 == 0)
       message = this.config.spreeMessages().get(this.config.maxMessageBounty());
+    if (message == null)
+      return;
     message = SpreeConfig.formatString(message, event.player().getName(), event.spree());
     Bukkit.broadcastMessage(message);
   }

@@ -4,7 +4,6 @@ import net.rocketeer.sevens.command.*;
 import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.game.bounty.BountyNameTagListener;
 import net.rocketeer.sevens.game.bounty.BountyRegistry;
-import net.rocketeer.sevens.game.bounty.BountyRewardEvent;
 import net.rocketeer.sevens.game.name.NameTagRegistry;
 import net.rocketeer.sevens.game.name.StaticTagManager;
 import net.rocketeer.sevens.game.prize.PrizeConfig;
@@ -80,7 +79,7 @@ public class SevensPlugin extends JavaPlugin {
     Bukkit.getPluginCommand("score").setExecutor(new ScoreCommand(this, this.playerDatabase));
     Bukkit.getPluginCommand("bounty").setExecutor(new BountyCommand(this, this.playerDatabase, bRegistry));
     Bukkit.getPluginCommand("spree").setExecutor(new SpreeCommand(sRegistry));
-    Bukkit.getPluginCommand("scoreresetall").setExecutor(new ResetCommand(this, this.playerDatabase));
+    Bukkit.getPluginCommand("scoreresetall").setExecutor(new ScoreResetCommand(this, this.playerDatabase));
     this.tagManager = new StaticTagManager(this);
   }
 

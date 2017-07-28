@@ -11,11 +11,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ResetCommand implements CommandExecutor {
+public class ScoreResetCommand implements CommandExecutor {
   private final JavaPlugin plugin;
   private final PlayerDatabase database;
 
-  public ResetCommand(JavaPlugin plugin, PlayerDatabase database) {
+  public ScoreResetCommand(JavaPlugin plugin, PlayerDatabase database) {
     this.plugin = plugin;
     this.database = database;
   }
