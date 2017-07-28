@@ -12,6 +12,8 @@ public interface PlayerDatabase {
   void updateScore(SevensPlayer player, int addScore) throws Exception;
   List<SevensPlayer> fetchTopPlayers(int begin, int nPlayers) throws Exception;
   void resetAllScores() throws Exception;
+  void updateRating(SevensPlayer player, double muDelta, double sigmaDelta) throws Exception;
+  PlayerRank computeRank(SevensPlayer player) throws Exception;
 
   static byte[] uuidToBytes(UUID uuid) throws IOException {
     ByteArrayOutputStream ba = new ByteArrayOutputStream(16);

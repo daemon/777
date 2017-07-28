@@ -27,7 +27,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
         try (ResultSet rs = stmt.executeQuery()) {
           if (rs.next())
-            return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"));
+            return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"), 25, 8.33);
           else if (!createIfNotExists)
             return null;
         }
@@ -38,7 +38,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
             throw new SQLException("Creating player failed!");
           try (ResultSet rs = stmt2.getGeneratedKeys()) {
             if (rs.next())
-              return new SevensPlayer(this, uuid, rs.getInt(1), 0);
+              return new SevensPlayer(this, uuid, rs.getInt(1), 0, 25, 8.33);
             else
               throw new SQLException("Creating player failed!");
           }
@@ -122,7 +122,8 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         List<SevensPlayer> players = new LinkedList<>();
         while (rs.next()) {
           UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
-          players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points")));
+          players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
+              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma")));
         }
         return players;
       }
@@ -135,5 +136,26 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
          java.sql.Statement stmt = c.createStatement()) {
       stmt.execute("UPDATE svns_players SET points=0");
     }
+  }
+
+  @Override
+  public void updateRating(SevensPlayer player, double muDelta, double sigmaDelta) throws Exception {
+    try (Connection c = this.manager.getConnection();
+         PreparedStatement stmt = c.prepareStatement("UPDATE svns_players SET rating_sigma=rating_sigma+?, " +
+             "rating_mu=rating_mu+?, rating=? WHERE id=?")) {
+      stmt.setDouble(1, sigmaDelta);
+      stmt.setDouble(2, muDelta);
+      stmt.setDouble(3, player.rating());
+      stmt.setInt(4, player.id);
+      int rows = stmt.executeUpdate();
+      if (rows == 0)
+        throw new SQLException("Failed to update sigma");
+    }
+  }
+
+  @Override
+  public PlayerRank computeRank(SevensPlayer player) throws Exception {
+
+    return null;
   }
 }

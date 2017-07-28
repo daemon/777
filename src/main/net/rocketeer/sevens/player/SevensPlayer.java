@@ -7,12 +7,16 @@ public class SevensPlayer {
   private final PlayerDatabase database;
   private final int score;
   private final UUID uuid;
+  private double sigma;
+  private double mu;
 
-  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score) {
+  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score, double mu, double sigma) {
     this.id = id;
     this.score = score;
     this.database = database;
     this.uuid = uuid;
+    this.mu = mu;
+    this.sigma = sigma;
   }
 
   public UUID uuid() {
@@ -25,6 +29,24 @@ public class SevensPlayer {
 
   public int score() {
     return this.score;
+  }
+
+  public double sigma() {
+    return this.sigma;
+  }
+
+  public double mu() {
+    return this.mu;
+  }
+
+  public double rating() {
+    return this.mu() - 3 * this.sigma;
+  }
+
+  public void addRating(double muDelta, double sigmaDelta) throws Exception {
+    this.sigma += sigmaDelta;
+    this.mu += muDelta;
+    this.database.updateRating(this, muDelta, sigmaDelta);
   }
 
   public void addScore(int points) throws Exception {

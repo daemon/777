@@ -14,7 +14,7 @@ import net.rocketeer.sevens.game.spree.SpreeRegistry;
 import net.rocketeer.sevens.player.MySqlPlayerDatabase;
 import net.rocketeer.sevens.player.PlayerDatabase;
 import net.rocketeer.sevens.player.listener.BountyLoggingListener;
-import net.rocketeer.sevens.player.listener.KillLoggingListener;
+import net.rocketeer.sevens.player.listener.KillRatingListener;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -55,7 +55,7 @@ public class SevensPlugin extends JavaPlugin {
     List<String> worlds = this.getConfig().getStringList("worlds");
     Set<String> trackedWorlds = new HashSet<>();
     trackedWorlds.addAll(worlds);
-    Bukkit.getPluginManager().registerEvents(new KillLoggingListener(this, this.playerDatabase, trackedWorlds), this);
+    Bukkit.getPluginManager().registerEvents(new KillRatingListener(this, this.playerDatabase, trackedWorlds), this);
     this.registry = new NameTagRegistry("name");
     registry.init(this);
     BountyRegistry bRegistry = new BountyRegistry("bounty");
