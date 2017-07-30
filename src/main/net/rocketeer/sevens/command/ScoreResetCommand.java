@@ -24,7 +24,7 @@ public class ScoreResetCommand implements CommandExecutor {
   public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
     Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
       try {
-        List<SevensPlayer> players = this.database.fetchTopPlayers(0, 10);
+        List<SevensPlayer> players = this.database.fetchTopScorePlayers(0, 10);
         Bukkit.getScheduler().runTask(this.plugin, () -> {
           List<String> uuids = players.stream().map(p -> p.uuid().toString()).collect(Collectors.toList());
           this.plugin.getConfig().set("top", uuids);

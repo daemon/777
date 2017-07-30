@@ -1,5 +1,9 @@
 package net.rocketeer.sevens.player;
 
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
+
 import java.util.UUID;
 
 public class SevensPlayer {
@@ -7,16 +11,22 @@ public class SevensPlayer {
   private final PlayerDatabase database;
   private final int score;
   private final UUID uuid;
+  private final int nPlays;
   private double sigma;
   private double mu;
 
-  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score, double mu, double sigma) {
+  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score, double mu, double sigma, int nPlays) {
     this.id = id;
     this.score = score;
     this.database = database;
     this.uuid = uuid;
     this.mu = mu;
     this.sigma = sigma;
+    this.nPlays = nPlays;
+  }
+
+  public int nPlays() {
+    return this.nPlays;
   }
 
   public UUID uuid() {

@@ -75,11 +75,13 @@ public class SevensPlugin extends JavaPlugin {
     Bukkit.getPluginManager().registerEvents(new BountyNameTagListener(this.registry), this);
     Bukkit.getPluginManager().registerEvents(new BountyLoggingListener(this, this.playerDatabase, trackedWorlds), this);
     Bukkit.getPluginManager().registerEvents(new PrizeListener(this, prizeConfig, topUuids), this);
-    Bukkit.getPluginCommand("scoretop").setExecutor(new HighScoreCommand(this, this.playerDatabase));
+    Bukkit.getPluginCommand("scoretop").setExecutor(new HighScoreCommand(this, this.playerDatabase, HighScoreCommand.HighScoreType.SCORE));
+    Bukkit.getPluginCommand("ranktop").setExecutor(new HighScoreCommand(this, this.playerDatabase, HighScoreCommand.HighScoreType.RANK));
     Bukkit.getPluginCommand("score").setExecutor(new ScoreCommand(this, this.playerDatabase));
     Bukkit.getPluginCommand("bounty").setExecutor(new BountyCommand(this, this.playerDatabase, bRegistry));
     Bukkit.getPluginCommand("spree").setExecutor(new SpreeCommand(sRegistry));
     Bukkit.getPluginCommand("scoreresetall").setExecutor(new ScoreResetCommand(this, this.playerDatabase));
+    Bukkit.getPluginCommand("rank").setExecutor(new RankCommand(this, this.playerDatabase));
     this.tagManager = new StaticTagManager(this);
   }
 

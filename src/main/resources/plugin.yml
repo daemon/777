@@ -1,6 +1,6 @@
 name: 777
 main: net.rocketeer.sevens.SevensPlugin
-version: 0.0.1
+version: 0.1.0
 depend: [WorldGuard,ProtocolLib]
 commands:
   score:
@@ -27,4 +27,14 @@ commands:
     description: New month of bending. DO NOT USE IF YOU DON'T KNOW WHAT IT DOES
     usage: /scoreresetall
     permission: sevens.admin
+    permission-message: You don't have permission to do this!
+  rank:
+    description: Shows your current rank
+    usage: /rank [player name]
+    permission: sevens.cmd.rank
+    permission-message: You don't have permission to do this!
+  ranktop:
+    description: Lists highest ranking players
+    usage: /ranktop [page number]
+    permission: sevens.cmd.ranktop
     permission-message: You don't have permission to do this!

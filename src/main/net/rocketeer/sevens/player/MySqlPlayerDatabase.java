@@ -27,7 +27,8 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         stmt.setBinaryStream(1, PlayerDatabase.uuidToStream(uuid));
         try (ResultSet rs = stmt.executeQuery()) {
           if (rs.next())
-            return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"), 25, 8.33);
+            return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
+                rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays"));
           else if (!createIfNotExists)
             return null;
         }
@@ -38,7 +39,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
             throw new SQLException("Creating player failed!");
           try (ResultSet rs = stmt2.getGeneratedKeys()) {
             if (rs.next())
-              return new SevensPlayer(this, uuid, rs.getInt(1), 0, 25, 8.33);
+              return new SevensPlayer(this, uuid, rs.getInt(1), 0, 25, 8.33, 0);
             else
               throw new SQLException("Creating player failed!");
           }
@@ -112,7 +113,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
   }
 
   @Override
-  public List<SevensPlayer> fetchTopPlayers(int begin, int nPlayers) throws Exception {
+  public List<SevensPlayer> fetchTopScorePlayers(int begin, int nPlayers) throws Exception {
     final String stmtStr = "SELECT * FROM svns_players ORDER BY points DESC LIMIT ?, ?";
     try (Connection c = this.manager.getConnection();
          PreparedStatement stmt = c.prepareStatement(stmtStr)) {
@@ -123,7 +124,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         while (rs.next()) {
           UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
           players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
-              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma")));
+              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays")));
         }
         return players;
       }
@@ -142,11 +143,10 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
   public void updateRating(SevensPlayer player, double muDelta, double sigmaDelta) throws Exception {
     try (Connection c = this.manager.getConnection();
          PreparedStatement stmt = c.prepareStatement("UPDATE svns_players SET rating_sigma=rating_sigma+?, " +
-             "rating_mu=rating_mu+?, rating=? WHERE id=?")) {
+             "rating_mu=rating_mu+?, rating=rating_mu-3*(rating_sigma), plays=plays+1 WHERE id=?")) {
       stmt.setDouble(1, sigmaDelta);
       stmt.setDouble(2, muDelta);
-      stmt.setDouble(3, player.rating());
-      stmt.setInt(4, player.id);
+      stmt.setInt(3, player.id);
       int rows = stmt.executeUpdate();
       if (rows == 0)
         throw new SQLException("Failed to update sigma");
@@ -155,7 +155,37 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
 
   @Override
   public PlayerRank computeRank(SevensPlayer player) throws Exception {
+    if (player.nPlays() < 15)
+      return PlayerRank.UNRANKED;
+    try (Connection c = this.manager.getConnection();
+    PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15");
+    PreparedStatement stmt2 = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15 AND rating < ?");
+    ResultSet rs = stmt.executeQuery()) {
+      rs.next();
+      double count = rs.getInt(1);
+      stmt2.setDouble(1, player.rating());
+      ResultSet rs2 = stmt2.executeQuery();
+      rs2.next();
+      return PlayerRank.percentileToRank(rs2.getInt(1) / count);
+    }
+  }
 
-    return null;
+  @Override
+  public List<SevensPlayer> fetchTopRankPlayers(int begin, int nPlayers) throws Exception {
+    final String stmtStr = "SELECT * FROM svns_players ORDER BY rating DESC LIMIT ?, ?";
+    try (Connection c = this.manager.getConnection();
+         PreparedStatement stmt = c.prepareStatement(stmtStr)) {
+      stmt.setInt(1, begin);
+      stmt.setInt(2, nPlayers);
+      try (ResultSet rs = stmt.executeQuery()) {
+        List<SevensPlayer> players = new LinkedList<>();
+        while (rs.next()) {
+          UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
+          players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
+              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays")));
+        }
+        return players;
+      }
+    }
   }
 }

@@ -10,10 +10,11 @@ public interface PlayerDatabase {
   Record fetchRecord(SevensPlayer player1, SevensPlayer player2) throws Exception;
   void updateRecord(Record record, int newKills, int newDeaths) throws Exception;
   void updateScore(SevensPlayer player, int addScore) throws Exception;
-  List<SevensPlayer> fetchTopPlayers(int begin, int nPlayers) throws Exception;
+  List<SevensPlayer> fetchTopScorePlayers(int begin, int nPlayers) throws Exception;
   void resetAllScores() throws Exception;
   void updateRating(SevensPlayer player, double muDelta, double sigmaDelta) throws Exception;
   PlayerRank computeRank(SevensPlayer player) throws Exception;
+  List<SevensPlayer> fetchTopRankPlayers(int begin, int nPlayers) throws Exception;
 
   static byte[] uuidToBytes(UUID uuid) throws IOException {
     ByteArrayOutputStream ba = new ByteArrayOutputStream(16);

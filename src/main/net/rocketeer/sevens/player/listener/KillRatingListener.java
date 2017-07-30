@@ -1,8 +1,11 @@
 package net.rocketeer.sevens.player.listener;
 
 import net.rocketeer.sevens.player.PlayerDatabase;
+import net.rocketeer.sevens.player.PlayerRank;
 import net.rocketeer.sevens.player.SevensPlayer;
+import net.rocketeer.sevens.player.SyncServerMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,7 +25,9 @@ public class KillRatingListener implements Listener {
   private final PlayerDatabase database;
   private final JavaPlugin plugin;
   private final Set<String> trackedWorlds;
-  private final Map<Player, List<RewardData>> rewardMap = new ConcurrentHashMap<>();
+  private final Map<Player, List<RewardData>> rewardMap = new HashMap<>();
+  private final Map<UUID, RankData> lastRankMap = new ConcurrentHashMap<>();
+  private final Map<UUID, String> nameCache = new ConcurrentHashMap<>();
 
   public KillRatingListener(JavaPlugin plugin, PlayerDatabase database, Set<String> trackedWorlds) {
     this.database = database;
@@ -32,9 +37,9 @@ public class KillRatingListener implements Listener {
   }
 
   private void computeNewRatings(Player losingPlayer, List<RewardData> rdList) throws Exception {
-    if (!this.rewardMap.containsKey(losingPlayer))
+    SevensPlayer loser = this.database.findPlayer(losingPlayer.getUniqueId(), true);
+    if (loser == null)
       return;
-    SevensPlayer loser = this.database.findPlayer(losingPlayer.getUniqueId(), false);
     Team losingTeam = new Team(new org.goochjs.jskills.Player<>(loser), new Rating(loser.mu(), loser.sigma()));
     Team winningTeam = new Team();
     List<ITeam> teams = Arrays.asList(winningTeam, losingTeam);
@@ -47,9 +52,13 @@ public class KillRatingListener implements Listener {
     }
     double finalTotal = total;
     contribMap.forEach((uuid, contrib) -> {
+      if (uuid.equals(losingPlayer.getUniqueId()))
+        return;
       SevensPlayer p;
       try {
         p = this.database.findPlayer(uuid, false);
+        if (p == null)
+          return;
       } catch (Exception ignored) {
         return;
       }
@@ -60,8 +69,23 @@ public class KillRatingListener implements Listener {
       SevensPlayer player = ((org.goochjs.jskills.Player<SevensPlayer>) p).getId();
       try {
         player.addRating(r.getMean() - player.mu(), r.getStandardDeviation() - player.sigma());
-      } catch (Exception e) {}
+        PlayerRank rank = this.database.computeRank(player);
+        RankData lastRankData = this.lastRankMap.get(player.uuid());
+        String name = this.cachedName(player.uuid());
+        if (lastRankData != null && lastRankData.rank.tier != rank.tier && lastRankData.rating != player.rating() && name != null) {
+          String message = ChatColor.AQUA + "%s " + ChatColor.WHITE + "is now " + rank.color() + rank.category;
+          message = String.format(message, name);
+          new SyncServerMessage(this.plugin, message).send();
+        }
+        this.lastRankMap.put(player.uuid(), new RankData(player.rating(), rank));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     });
+  }
+
+  private String cachedName(UUID uuid) {
+    return this.nameCache.get(uuid);
   }
 
   private void logKill(PlayerDeathEvent event) throws InterruptedException {
@@ -87,12 +111,13 @@ public class KillRatingListener implements Listener {
 
   @EventHandler
   public void onDamageEvent(EntityDamageByEntityEvent event) {
-    if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
-      return;
     if (!(event.getEntity() instanceof Player))
       return;
+    if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
+      return;
     Player player = (Player) event.getEntity();
-    this.rewardMap.putIfAbsent(player, new ArrayList<>());
+    this.rewardMap.putIfAbsent(player, new LinkedList<>());
+    this.nameCache.putIfAbsent(player.getUniqueId(), player.getName());
     List<RewardData> rewardDataList = this.rewardMap.get(player);
     if (rewardDataList.size() > 0 && rewardDataList.get(rewardDataList.size() - 1).causeEntityUuid.equals(event.getDamager().getUniqueId())) {
       RewardData last = rewardDataList.get(rewardDataList.size() - 1);
@@ -105,9 +130,9 @@ public class KillRatingListener implements Listener {
 
   @EventHandler
   public void onHealEvent(EntityRegainHealthEvent event) {
-    if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
-      return;
     if (!(event.getEntity() instanceof Player))
+      return;
+    if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
       return;
     Player player = (Player) event.getEntity();
     if (!this.rewardMap.containsKey(player))
@@ -139,11 +164,22 @@ public class KillRatingListener implements Listener {
     }
   }
 
+  private static class RankData {
+    private double rating;
+    private PlayerRank rank;
+
+    private RankData(double rating, PlayerRank rank) {
+      this.rank = rank;
+      this.rating = rating;
+    }
+  }
+
   private class ExpireMapTask implements Runnable {
     @Override
     public void run() {
       rewardMap.forEach((p, list) -> list.removeIf(r -> r.timestamp < System.currentTimeMillis() - 60000));
       rewardMap.entrySet().removeIf(e -> e.getValue().isEmpty());
+      nameCache.clear();
     }
   }
 }
