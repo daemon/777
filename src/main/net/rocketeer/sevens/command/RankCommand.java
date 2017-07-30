@@ -6,10 +6,10 @@ import net.rocketeer.sevens.player.SevensPlayer;
 import net.rocketeer.sevens.player.SyncPlayerMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class RankCommand implements CommandExecutor {
@@ -24,7 +24,7 @@ public class RankCommand implements CommandExecutor {
   @Override
   public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
     String name = args.length > 0 ? args[0] : sender.getName();
-    Player player = Bukkit.getServer().getPlayer(name);
+    OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(name);
     if (player == null) {
       sender.sendMessage(ChatColor.RED + "Player not found!");
       return true;
