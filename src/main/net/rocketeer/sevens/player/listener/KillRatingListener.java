@@ -64,6 +64,8 @@ public class KillRatingListener implements Listener {
       }
       winningTeam.addPlayer(new org.goochjs.jskills.Player<>(p, contrib / finalTotal), new Rating(p.mu(), p.sigma()));
     });
+    if (winningTeam.isEmpty())
+      return;
     Map<IPlayer, Rating> ratings = TrueSkillCalculator.calculateNewRatings(GameInfo.getDefaultGameInfo(), teams, 1, 2);
     ratings.forEach((p, r) -> {
       SevensPlayer player = ((org.goochjs.jskills.Player<SevensPlayer>) p).getId();
