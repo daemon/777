@@ -38,7 +38,7 @@ public class KillRatingListener implements Listener {
 
   private void computeNewRatings(Player losingPlayer, List<RewardData> rdList) throws Exception {
     SevensPlayer loser = this.database.findPlayer(losingPlayer.getUniqueId(), true);
-    if (loser == null)
+    if (loser == null || !loser.isEnabled())
       return;
     Team losingTeam = new Team(new org.goochjs.jskills.Player<>(loser), new Rating(loser.mu(), loser.sigma()));
     Team winningTeam = new Team();
@@ -57,7 +57,7 @@ public class KillRatingListener implements Listener {
       SevensPlayer p;
       try {
         p = this.database.findPlayer(uuid, false);
-        if (p == null)
+        if (p == null || !p.isEnabled())
           return;
       } catch (Exception ignored) {
         return;

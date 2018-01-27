@@ -4,7 +4,6 @@ import com.mysql.jdbc.Statement;
 import net.rocketeer.sevens.database.DatabaseManager;
 import net.rocketeer.sevens.database.TransactionGuard;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +27,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         try (ResultSet rs = stmt.executeQuery()) {
           if (rs.next())
             return new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
-                rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays"));
+                rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays"), rs.getInt("enabled") == 1);
           else if (!createIfNotExists)
             return null;
         }
@@ -39,7 +38,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
             throw new SQLException("Creating player failed!");
           try (ResultSet rs = stmt2.getGeneratedKeys()) {
             if (rs.next())
-              return new SevensPlayer(this, uuid, rs.getInt(1), 0, 25, 8.33, 0);
+              return new SevensPlayer(this, uuid, rs.getInt(1), 0, 25, 8.33, 0, true);
             else
               throw new SQLException("Creating player failed!");
           }
@@ -124,7 +123,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         while (rs.next()) {
           UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
           players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
-              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays")));
+              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays"), rs.getInt("enabled") == 1));
         }
         return players;
       }
@@ -150,6 +149,18 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       int rows = stmt.executeUpdate();
       if (rows == 0)
         throw new SQLException("Failed to update sigma");
+    }
+  }
+
+  @Override
+  public void updateEnabled(SevensPlayer player, boolean enabled) throws Exception {
+    try (Connection c = this.manager.getConnection();
+         PreparedStatement stmt = c.prepareStatement("UPDATE svns_players SET enabled=? WHERE id=?")) {
+      stmt.setInt(1, enabled ? 1 : 0);
+      stmt.setInt(2, player.id);
+      int rows = stmt.executeUpdate();
+      if (rows == 0)
+        throw new SQLException("Failed to update enabled status");
     }
   }
 
@@ -182,7 +193,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
         while (rs.next()) {
           UUID uuid = PlayerDatabase.streamToUuid(rs.getBinaryStream("uuid"));
           players.add(new SevensPlayer(this, uuid, rs.getInt("id"), rs.getInt("points"),
-              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays")));
+              rs.getDouble("rating_mu"), rs.getDouble("rating_sigma"), rs.getInt("plays"), rs.getInt("enabled") == 1));
         }
         return players;
       }

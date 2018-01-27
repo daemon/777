@@ -1,8 +1,13 @@
 name: 777
 main: net.rocketeer.sevens.SevensPlugin
-version: 0.1.0
+version: 0.1.1
 depend: [WorldGuard,ProtocolLib]
 commands:
+  togglerating:
+    description: Toggles ranking system on or off
+    usage: /togglerating
+    permission: sevens.cmd.togglerating
+    permission-message: You don't have permission to do this!
   score:
     description: Shows your current score
     usage: /score [player name]

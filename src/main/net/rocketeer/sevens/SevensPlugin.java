@@ -82,6 +82,7 @@ public class SevensPlugin extends JavaPlugin {
     Bukkit.getPluginCommand("spree").setExecutor(new SpreeCommand(sRegistry));
     Bukkit.getPluginCommand("scoreresetall").setExecutor(new ScoreResetCommand(this, this.playerDatabase));
     Bukkit.getPluginCommand("rank").setExecutor(new RankCommand(this, this.playerDatabase));
+    Bukkit.getPluginCommand("togglerating").setExecutor(new ToggleEnabledCommand(this, this.playerDatabase));
     this.tagManager = new StaticTagManager(this);
   }
 

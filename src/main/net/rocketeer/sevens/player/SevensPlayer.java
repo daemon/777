@@ -12,10 +12,11 @@ public class SevensPlayer {
   private final int score;
   private final UUID uuid;
   private final int nPlays;
+  private final boolean isEnabled;
   private double sigma;
   private double mu;
 
-  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score, double mu, double sigma, int nPlays) {
+  SevensPlayer(PlayerDatabase database, UUID uuid, int id, int score, double mu, double sigma, int nPlays, boolean isEnabled) {
     this.id = id;
     this.score = score;
     this.database = database;
@@ -23,6 +24,11 @@ public class SevensPlayer {
     this.mu = mu;
     this.sigma = sigma;
     this.nPlays = nPlays;
+    this.isEnabled = isEnabled;
+  }
+
+  public boolean isEnabled() {
+    return this.isEnabled;
   }
 
   public int nPlays() {

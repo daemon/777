@@ -13,6 +13,7 @@ public interface PlayerDatabase {
   List<SevensPlayer> fetchTopScorePlayers(int begin, int nPlayers) throws Exception;
   void resetAllScores() throws Exception;
   void updateRating(SevensPlayer player, double muDelta, double sigmaDelta) throws Exception;
+  void updateEnabled(SevensPlayer player, boolean enabled) throws Exception;
   PlayerRank computeRank(SevensPlayer player) throws Exception;
   List<SevensPlayer> fetchTopRankPlayers(int begin, int nPlayers) throws Exception;
 
