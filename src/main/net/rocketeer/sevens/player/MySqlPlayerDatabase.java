@@ -159,7 +159,7 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
       return PlayerRank.UNRANKED;
     try (Connection c = this.manager.getConnection();
     PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15");
-    PreparedStatement stmt2 = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15 AND rating < ?");
+    PreparedStatement stmt2 = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15 AND rating <= ?");
     ResultSet rs = stmt.executeQuery()) {
       rs.next();
       double count = rs.getInt(1);

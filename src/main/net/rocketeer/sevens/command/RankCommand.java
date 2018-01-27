@@ -25,7 +25,7 @@ public class RankCommand implements CommandExecutor {
   public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
     String name = args.length > 0 ? args[0] : sender.getName();
     OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(name);
-    if (player == null) {
+    if (player == null || !player.hasPlayedBefore()) {
       sender.sendMessage(ChatColor.RED + "Player not found!");
       return true;
     }
