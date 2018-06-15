@@ -111,9 +111,9 @@ public class KillRatingListener implements Listener {
     this.logKill(event);
   }
 
-  @EventHandler
+  @EventHandler(ignoreCancelled = true)
   public void onDamageEvent(EntityDamageByEntityEvent event) {
-    if (!(event.getEntity() instanceof Player))
+    if (!(event.getEntity() instanceof Player) || !(event.getDamager() instanceof Player))
       return;
     if (!this.trackedWorlds.contains(event.getEntity().getWorld().getName()))
       return;
