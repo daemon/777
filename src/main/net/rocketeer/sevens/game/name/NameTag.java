@@ -58,6 +58,11 @@ public class NameTag {
     this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(3, bls), true);
     byte byteData = 0x01 | 0x08 | 0x10;
     int maskIndex = (ServerVersion > 9) ? 11 : 10;
+
+    if (ServerVersion > 13) {
+      maskIndex = 14;
+    }
+
     this.watcher.setObject(new WrappedDataWatcher.WrappedDataWatcherObject(maskIndex, bs), byteData);
   }
 

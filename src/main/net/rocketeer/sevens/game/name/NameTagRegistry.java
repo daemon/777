@@ -34,7 +34,7 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     return tag;
   }
 
-  public void unregisterFakeName(Player player) {
+  public void unregisterNameTag(Player player) {
     NameTag tag = this.nameTagMap.get(player);
     if (tag == null)
       return;
@@ -103,10 +103,8 @@ public class NameTagRegistry extends AttributeRegistry<NameTag> {
     loc = lastLocations.remove(player);
     if (loc != null)
       this.players.remove(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-    NameTag tag = nameTagMap.get(player);
-    if (tag == null)
-      return;
-    tag.destroy();
+
+    unregisterNameTag(player);
   }
 
   private class NameTagListener implements Listener {
