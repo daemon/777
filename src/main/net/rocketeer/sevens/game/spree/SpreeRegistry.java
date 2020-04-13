@@ -47,10 +47,12 @@ public class SpreeRegistry extends AttributeRegistry<Integer> {
   }
 
   public class Listener implements org.bukkit.event.Listener {
+    @EventHandler
     public void onWorldChange(PlayerChangedWorldEvent event) {
       endSpree(event.getPlayer());
     }
 
+    @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
       endSpree(event.getPlayer());
       playerToSpree.remove(event.getPlayer());
