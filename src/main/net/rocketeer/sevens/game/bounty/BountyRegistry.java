@@ -41,7 +41,7 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
     } catch (Exception e) {
       return 10;
     }
-    return (int) Math.max(Math.pow(sPlayer.rating(), this.defaultBountyPower), 1);
+    return (int) Math.pow(Math.max(sPlayer.rating(), 1), this.defaultBountyPower);
   }
 
   public void initBounty(Player player) {
