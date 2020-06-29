@@ -58,7 +58,7 @@ public class SevensPlugin extends JavaPlugin {
     Bukkit.getPluginManager().registerEvents(new KillRatingListener(this, this.playerDatabase, trackedWorlds), this);
     this.registry = new NameTagRegistry("name");
     registry.init(this);
-    BountyRegistry bRegistry = new BountyRegistry("bounty");
+    BountyRegistry bRegistry = new BountyRegistry("bounty", this.playerDatabase);
     bRegistry.init(this);
     SpreeRegistry sRegistry = new SpreeRegistry("spree");
     sRegistry.init(this);

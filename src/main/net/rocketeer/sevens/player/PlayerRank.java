@@ -3,20 +3,30 @@ package net.rocketeer.sevens.player;
 import org.bukkit.ChatColor;
 
 public enum PlayerRank {
-  UNRANKED("Unranked", 0, 0), WOOD3("Wood III", 0.08, 1), WOOD2("Wood II", 0.16, 1), WOOD1("Wood I", 0.25, 1),
-  IRON3("Iron III", 0.34, 2), IRON2("Iron II", 0.44, 2), IRON1("Iron I", 0.55, 2),
-  GOLD3("Gold III", 0.65, 3), GOLD2("Gold II", 0.72, 3), GOLD1("Gold I", 0.8, 3),
-  DIAMOND3("Diamond III", 0.85, 4), DIAMOND2("Diamond II", 0.9, 4), DIAMOND1("Diamond I", 0.95, 4), GOD("God", 1, 5);
-  public final double percentile;
+  UNRANKED("Unranked", -100, 0),
+  BRONZE3("Bronze III", 1.32, 1),
+  BRONZE2("Bronze II", 4.5, 1),
+  BRONZE1("Bronze I", 7, 1),
+  IRON3("Silver III", 9, 2),
+  IRON2("Silver II", 11.45, 2),
+  IRON1("Silver I", 14, 2),
+  GOLD3("Gold III", 16, 3),
+  GOLD2("Gold II", 18, 3),
+  GOLD1("Gold I", 19.67, 3),
+  DIAMOND3("Diamond III", 21, 4),
+  DIAMOND2("Diamond II", 23, 4),
+  DIAMOND1("Diamond I", 25, 4),
+  GOD("God", 100, 5);
+  public final double rating;
   public final String name;
   public final int tier;
   public final String category;
 
   private ChatColor[] colorMap = { ChatColor.GRAY, ChatColor.YELLOW, ChatColor.WHITE, ChatColor.GOLD, ChatColor.AQUA, ChatColor.LIGHT_PURPLE };
 
-  PlayerRank(String name, double percentile, int tier) {
+  PlayerRank(String name, double rating, int tier) {
     this.name = name;
-    this.percentile = percentile;
+    this.rating = rating;
     this.tier = tier;
     this.category = name.split(" ")[0];
   }
@@ -25,10 +35,10 @@ public enum PlayerRank {
     return this.colorMap[this.tier];
   }
 
-  public static PlayerRank percentileToRank(double percentile) {
+  public static PlayerRank ratingToRank(double rating) {
     for (PlayerRank rank : PlayerRank.values())
-      if (percentile <= rank.percentile)
+      if (rating <= rank.rating)
         return rank;
-    throw new IllegalArgumentException("percentile must be less than or equal to 1");
+    return UNRANKED;
   }
 }

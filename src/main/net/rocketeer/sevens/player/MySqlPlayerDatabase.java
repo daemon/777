@@ -165,20 +165,10 @@ public class MySqlPlayerDatabase implements PlayerDatabase {
   }
 
   @Override
-  public PlayerRank computeRank(SevensPlayer player) throws Exception {
-    if (player.nPlays() < 15)
+  public PlayerRank computeRank(SevensPlayer player) {
+    if (player.nPlays() < 10)
       return PlayerRank.UNRANKED;
-    try (Connection c = this.manager.getConnection();
-    PreparedStatement stmt = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15");
-    PreparedStatement stmt2 = c.prepareStatement("SELECT COUNT(*) FROM svns_players WHERE plays >= 15 AND rating <= ?");
-    ResultSet rs = stmt.executeQuery()) {
-      rs.next();
-      double count = rs.getInt(1);
-      stmt2.setDouble(1, player.rating());
-      ResultSet rs2 = stmt2.executeQuery();
-      rs2.next();
-      return PlayerRank.percentileToRank(rs2.getInt(1) / count);
-    }
+    return PlayerRank.ratingToRank(player.rating());
   }
 
   @Override

@@ -27,7 +27,7 @@ public class BountyCommand implements CommandExecutor {
 
   private void addBounty(Player sender, Player target, int bounty) {
     if (bounty < 1) {
-      sender.sendMessage(ChatColor.RED + "Bounty cannot be non-positive!");
+      sender.sendMessage(ChatColor.RED + "Bounty cannot be nonpositive!");
       return;
     }
     UUID uuid = sender.getUniqueId();

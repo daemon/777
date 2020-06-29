@@ -1,6 +1,6 @@
 name: 777
 main: net.rocketeer.sevens.SevensPlugin
-version: 0.1.3
+version: 0.1.4
 depend: [WorldGuard,ProtocolLib]
 commands:
   togglerating:
