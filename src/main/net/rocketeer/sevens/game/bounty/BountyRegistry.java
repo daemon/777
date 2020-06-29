@@ -15,10 +15,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BountyRegistry extends AttributeRegistry<Integer> {
   private final PlayerDatabase database;
-  private Map<Player, Integer> playerToBounty = new HashMap<>();
+  private Map<Player, Integer> playerToBounty = new ConcurrentHashMap<>();
   private double defaultBountyPower;
   private JavaPlugin plugin;
 
@@ -47,7 +48,8 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
   public void initBounty(Player player) {
     int bounty = this.computeDefaultBounty(player);
     this.playerToBounty.put(player, bounty);
-    Bukkit.getPluginManager().callEvent(new BountyChangeEvent(player, bounty, 0));
+    Bukkit.getScheduler().runTask(this.plugin, () -> Bukkit.getPluginManager().callEvent(new BountyChangeEvent(player,
+            bounty, 0)));
   }
 
   public void removePlayer(Player player) {
@@ -56,11 +58,15 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
 
   @Override
   public void setAttribute(Player player, Integer newBounty) {
-    Integer oldBounty = playerToBounty.remove(player);
-    if (oldBounty == null)
-      oldBounty = this.computeDefaultBounty(player);
-    this.playerToBounty.put(player, newBounty);
-    Bukkit.getPluginManager().callEvent(new BountyChangeEvent(player, newBounty, oldBounty));
+    Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+      Integer oldBounty = playerToBounty.remove(player);
+      if (oldBounty == null)
+        oldBounty = computeDefaultBounty(player);
+      playerToBounty.put(player, newBounty);
+      Integer finalOldBounty = oldBounty;
+      Bukkit.getScheduler().runTask(plugin, () -> Bukkit.getPluginManager().callEvent(new BountyChangeEvent(player,
+              newBounty, finalOldBounty)));
+    });
   }
 
   @Override
@@ -76,7 +82,7 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
   private class BountyListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-      initBounty(event.getPlayer());
+      Bukkit.getScheduler().runTaskAsynchronously(BountyRegistry.this.plugin, () -> initBounty(event.getPlayer()));
     }
 
     @EventHandler
@@ -86,15 +92,17 @@ public class BountyRegistry extends AttributeRegistry<Integer> {
 
     @EventHandler(priority=EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
-      Player killer = event.getEntity().getKiller();
-      Player player = event.getEntity();
-      int bounty = playerToBounty.get(player);
-      initBounty(player);
-      if (killer == null)
-        return;
-      if (player.equals(killer))
-        return;
-      Bukkit.getPluginManager().callEvent(new BountyRewardEvent(killer, bounty, BountyRewardEvent.Cause.KILL));
+      Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Player killer = event.getEntity().getKiller();
+        Player player = event.getEntity();
+        int bounty = playerToBounty.get(player);
+        initBounty(player);
+        if (killer == null)
+          return;
+        if (player.equals(killer))
+          return;
+        Bukkit.getPluginManager().callEvent(new BountyRewardEvent(killer, bounty, BountyRewardEvent.Cause.KILL));
+      });
     }
   }
 }
