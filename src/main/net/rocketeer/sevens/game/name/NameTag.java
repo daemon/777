@@ -59,7 +59,9 @@ public class NameTag {
     byte byteData = 0x01 | 0x08 | 0x10;
     int maskIndex = (ServerVersion > 9) ? 11 : 10;
 
-    if (ServerVersion > 13) {
+    if (ServerVersion > 16) {
+      maskIndex = 15;
+    } else if (ServerVersion > 13) {
       maskIndex = 14;
     }
 
