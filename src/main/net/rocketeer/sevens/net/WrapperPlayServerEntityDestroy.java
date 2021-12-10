@@ -22,6 +22,7 @@ import java.util.List;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.google.common.primitives.Ints;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 public class WrapperPlayServerEntityDestroy extends AbstractPacket {
   public static final PacketType TYPE = PacketType.Play.Server.ENTITY_DESTROY;
@@ -40,14 +41,15 @@ public class WrapperPlayServerEntityDestroy extends AbstractPacket {
    * @return The current entities.
    */
   public List<Integer> getEntities() {
-    return Ints.asList(handle.getIntegerArrays().read(0));
+    IntArrayList list = (IntArrayList)handle.getModifier().read(0);
+    return Ints.asList(list.toIntArray());
   }
 
   /**
    * Set the entities that will be destroyed.
    */
   public void setEntities(int[] entities) {
-    handle.getIntegerArrays().write(0, entities);
+    handle.getModifier().write(0, new IntArrayList(entities));
   }
 
   /**
